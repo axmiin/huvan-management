@@ -3,7 +3,17 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { sb } from '../lib/supabase';
-const NAV = [['/', 'Dashboard'], ['/sales/', 'Sales & Income'], ['/expenses/', 'Expenses'], ['/cash/', 'Cash & Accounts'], ['/payroll/', 'Payroll'], ['/invoices/', 'Invoices']];
+const Svg = ({ d }) => (<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>);
+const NAV = [
+  ['/', 'Dashboard', 'Home', 'M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z'],
+  ['/sales/', 'Sales & Income', 'Sales', 'M23 6l-9.5 9.5-5-5L1 18 M17 6h6v6'],
+  ['/expenses/', 'Expenses', 'Expenses', 'M5 2h14v20l-3-2-2 2-2-2-2 2-2-2-3 2z M9 7h6 M9 11h6'],
+  ['/cash/', 'Cash & Accounts', 'Cash', 'M3 7h18v12H3z M3 7l2-3h14l2 3 M16 13h2'],
+  ['/payroll/', 'Payroll', 'Payroll', 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M23 21v-2a4 4 0 0 0-3-3.9 M16 3.1a4 4 0 0 1 0 7.8'],
+  ['/invoices/', 'Invoices', 'Invoices', 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M8 13h8 M8 17h8'],
+];
+const OUT = 'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4 M16 17l5-5-5-5 M21 12H9';
+const Brand = () => (<div className="brand"><span className="logo">H</span>Huvan Management</div>);
 export default function Shell({ children }) {
   const [s, setS] = useState(undefined), [em, setEm] = useState(''), [pw, setPw] = useState(''), [err, setErr] = useState('');
   const path = usePathname();
@@ -19,19 +29,25 @@ export default function Shell({ children }) {
       const r = await sb.auth.signInWithPassword({ email: em.trim(), password: pw });
       setErr(r.error ? 'Sign-in failed. Check your email and password.' : '');
     }}>
-      <h2>Huvan Management</h2>
+      <Brand />
       <label>Email</label><input type="email" value={em} onChange={(e) => setEm(e.target.value)} />
       <label>Password</label><input type="password" value={pw} onChange={(e) => setPw(e.target.value)} />
-      <button type="submit">Sign in</button><p className="err">{err}</p>
+      <button type="submit" style={{ width: '100%' }}>Sign in</button><p className="err">{err}</p>
     </form></div>
   );
   return (
     <div className="shell">
-      <nav><b>Huvan Management</b>
-        {NAV.map(([h, t]) => <Link key={h} href={h} className={path === h ? 'on' : ''}>{t}</Link>)}
-        <button className="alt" onClick={() => sb.auth.signOut()}>Sign out</button>
-      </nav>
+      <aside className="side">
+        <Brand />
+        {NAV.map(([h, t, , d]) => <Link key={h} href={h} className={'nl' + (path === h ? ' on' : '')}><Svg d={d} />{t}</Link>)}
+        <span className="sp" />
+        <button className="nl" onClick={() => sb.auth.signOut()}><Svg d={OUT} />Sign out</button>
+      </aside>
+      <header className="top"><Brand /><button aria-label="Sign out" onClick={() => sb.auth.signOut()}><Svg d={OUT} /></button></header>
       <main>{children}</main>
+      <nav className="tabs">
+        {NAV.map(([h, , t, d]) => <Link key={h} href={h} className={path === h ? 'on' : ''}><Svg d={d} />{t}</Link>)}
+      </nav>
     </div>
   );
 }
