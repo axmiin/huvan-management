@@ -1,3 +1,4 @@
+import EntryPage from '../../components/EntryPage';
 export default function Page() {
-  return (<><h1>Sales & Income</h1><p className="muted">Coming next.</p></>);
+  return <EntryPage table="sales" title="Sales & Income" noun="sale" cats={['Daily sales', 'Catering', 'Invoice payment', 'Other income']} />;
 }
