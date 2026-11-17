@@ -104,4 +104,6 @@ export default function Cash() {
     <div className="card" style={{ marginTop: 16 }}><h2>Transfer history</h2>
       <div className="xt"><table><thead><tr><th>Date</th><th>From</th><th>To</th><th>Note</th><th>Amount</th><th></th></tr></thead>
         <tbody>{hist.length ? hist.map((x) => (<tr key={x.id}><td>{dmy(x.entry_date)}</td><td>{name(x.from_account)}</td><td>{name(x.to_account)}</td><td>{x.note}</td>
-          <td className="n">{f(x.amount)}</td><td>
+          <td className="n">{f(x.amount)}</td><td><a onClick={() => delT(x.id)}>×</a></td></tr>)) : <tr><td colSpan="6">No transfers yet</td></tr>}</tbody></table></div>
+    </div></>);
+}
