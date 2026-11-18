@@ -141,7 +141,7 @@ export default function Cash() {
       <div>Total<b>{f(total)}</b></div>
     </div>
 
-    <div className="two">
+      <div style={{display:'grid',gap:16}}>
       <div className="card">
         <h2>Account statement</h2>
         <Field label="Account">
