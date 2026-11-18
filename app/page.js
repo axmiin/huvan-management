@@ -181,11 +181,11 @@ export default function Dashboard() {
           <p style={{ fontSize: 13, color: 'var(--muted)' }}>{monthLabel(month)}</p>
         </div>
         <input type="month" value={month} onChange={e => setMonth(e.target.value)}
-          style={{ padding: '8px 12px', border: '1px solid var(--line)', borderRadius: 10, background: 'var(--bg)', color: 'var(--ink)', font: 'inherit', fontSize: 13 }} />
+          style={{ padding: '8px 12px', border: '1px solid var(--line)', borderRadius: 10, background: 'var(--bg)', color: 'var(--ink)', font: 'inherit', fontSize: 13, width: '100%', maxWidth: 200 }} />
       </div>
 
       {loading ? <p style={{ color: 'var(--muted)' }}>Loading…</p> : <>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 12, marginBottom: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 12, marginBottom: 20 }}>
           <StatCard icon="M23 6l-9.5 9.5-5-5L1 18 M17 6h6v6" iconBg="#e8f0fd" iconColor="#2a78d6" label="Total revenue" value={'MVR ' + f(curSales)} delta={revDelta.label} deltaType={revDelta.type} />
           <StatCard icon="M5 2h14v20l-3-2-2 2-2-2-2 2-2-2-3 2z M9 7h6 M9 11h6" iconBg="#fdeee8" iconColor="#eb6834" label="Total expenses" value={'MVR ' + f(curExp)} delta={expDelta.label} deltaType={expDelta.type === 'up' ? 'dn' : 'up'} />
           <StatCard icon="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z M12 6v6l4 2" iconBg="#eaf3de" iconColor="#3b6d11" label="Net profit" value={'MVR ' + f(curProfit)} delta={profDelta.label} deltaType={profDelta.type} />
