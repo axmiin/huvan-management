@@ -42,7 +42,7 @@ export default function EntryPage({ table, title, noun, cats: base }) {
   };
   return (<><h1>{title}</h1><div className="two">
     <div className="card"><h2>Add {noun}</h2>
-      <label>Date</label><input type="date" value={form.entry_date} onChange={set('entry_date')} />
+      <label>Date</label><input type="date" value={form.entry_date} onChange={set('entry_date')} style={{maxWidth:'100%'}} />
       <label>Details</label><input value={form.details} onChange={set('details')} />
       <label>Category</label><input list={table + '-cats'} value={form.category} onChange={set('category')} />
       <datalist id={table + '-cats'}>{cats.map((c) => <option key={c} value={c} />)}</datalist>
