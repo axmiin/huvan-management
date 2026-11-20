@@ -25,8 +25,8 @@ const OUT_IC   = 'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4 M16 17l5-5-5-5 M21 12H
 
 const Brand = () => (
   <div className="brand">
-    <span className="logo">H</span>
-    <span>Huvan Management</span>
+    <img src="/Logo.png" alt="Huvan" style={{ height: 32, width: 'auto', objectFit: 'contain' }} />
+    <span>Huvan</span>
   </div>
 );
 
