@@ -28,8 +28,8 @@ const SUN_IC   = 'M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12
 
 const Brand = () => (
   <div className="brand">
-    <img src="/Logo.png" alt="Huvan Pro" style={{ height: 32, width: 'auto', objectFit: 'contain' }} />
-    <span>Huvan</span>
+    <img src="/Logo.png" alt="Huvan" style={{ height: 32, width: 'auto', objectFit: 'contain' }} />
+    <span>Huvan Pro</span>
   </div>
 );
 
