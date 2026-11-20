@@ -42,7 +42,7 @@ export default function EntryPage({ table, title, noun, cats: base }) {
   };
   return (<><h1>{title}</h1><div className="two">
     <div className="card"><h2>Add {noun}</h2>
-      <label>Date</label><input type="date" value={form.entry_date} onChange={set('entry_date')} style={{maxWidth:'100%'}} />
+      <label>Date</label><input type="date" value={form.entry_date} onChange={set('entry_date')} style={{width:'100%',maxWidth:'100%',boxSizing:'border-box'}} />
       <label>Details</label><input value={form.details} onChange={set('details')} />
       <label>Category</label><input list={table + '-cats'} value={form.category} onChange={set('category')} />
       <datalist id={table + '-cats'}>{cats.map((c) => <option key={c} value={c} />)}</datalist>
@@ -50,7 +50,7 @@ export default function EntryPage({ table, title, noun, cats: base }) {
       <label>Amount</label><input type="number" step="0.01" min="0" value={form.amount} onChange={set('amount')} />
       <button onClick={add}>Add</button><p className="err">{err}</p></div>
     <div className="card"><h2>{title} list</h2>
-      <label>Month (clear to show all)</label><input type="month" value={m} onChange={(e) => setM(e.target.value)} style={{maxWidth:'100%'}} />
+      <label>Month (clear to show all)</label><input type="month" value={m} onChange={(e) => setM(e.target.value)} style={{width:'100%',maxWidth:'100%',boxSizing:'border-box'}} />
       <div className="sum"><div>Total<b>{f(total)}</b></div><div>Entries<b>{list.length}</b></div><div>Biggest category<b>{top}</b></div></div>
       <button className="alt" onClick={csv}>Export CSV</button>
       <div className="xt"><table><thead><tr><th>Date</th><th>Details</th><th>Category</th><th>Account</th><th>Amount</th><th></th></tr></thead>
