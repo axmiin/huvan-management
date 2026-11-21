@@ -72,3 +72,5 @@ td a{cursor:pointer;color:var(--muted)}
   main{padding:14px 12px 32px}
   .two{grid-template-columns:minmax(0,1fr)}
 }
+.login input{font-size:16px}
+
