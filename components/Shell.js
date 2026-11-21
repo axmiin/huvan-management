@@ -26,14 +26,13 @@ const OUT_IC   = 'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4 M16 17l5-5-5-5 M21 12H
 const MOON_IC  = 'M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z';
 const SUN_IC   = 'M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42M12 5a7 7 0 1 0 0 14A7 7 0 0 0 12 5z';
 
-const Brand = () => (
-  <div className="brand">
-    
-    <img src="/Logo.png" alt="Huvan" style={{ height: 32, width: 32, maxWidth: 32, objectFit: 'cover', borderRadius: 5 }} />
-
-  <span>Huvan Pro</span>
-  </div>
+const Brand = ({ onClick }) => (
+  <Link href="/" className="brand" onClick={onClick} style={{ textDecoration:'none',color:'inherit' }}>
+    <img src="/Logo.png" alt="Huvan" style={{ height: 32, width: 32, maxWidth: 32, objectFit: 'cover', borderRadius: 8 }} />
+    <span>Huvan Pro</span>
+  </Link>
 );
+
 
 function Sidebar({ path, onNav, dark, setDark }) {
   return (
@@ -146,10 +145,11 @@ export default function Shell({ children }) {
         {/* mobile top bar */}
         <header className="top">
           <button aria-label="Open menu" onClick={() => setDrawerOpen(true)}
-            style={{ margin:0,padding:6,background:'none',border:'none',
-              color:'var(--ink)',cursor:'pointer' }}>
-            <Svg d={MENU_IC}/>
-          </button>
+  style={{ margin:0,padding:10,background:'none',border:'none',
+    color:'var(--ink)',cursor:'pointer' }}>
+  <Svg d={MENU_IC} style={{ width:24,height:24 }}/>
+  </button>
+
           <Brand/>
           <button aria-label="Toggle theme" onClick={() => setDark(d => !d)}
             style={{ margin:0,padding:6,background:'none',border:'none',
