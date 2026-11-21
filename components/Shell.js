@@ -55,7 +55,7 @@ function Sidebar({ path, onNav, dark, setDark }) {
         {dark ? 'Light mode' : 'Dark mode'}
       </button>
       
-      <button className="nl signout" onClick={() => { onNav(); setTimeout(() => sb.auth.signOut(), 50); }}>
+      <button className="nl signout" onClick={() => { onNav(); setTimeout(() => sb.auth.signOut(), 35); }}>
         <Svg d={OUT_IC}/>Sign out
       </button>
     </div>
