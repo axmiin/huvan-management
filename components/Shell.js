@@ -124,6 +124,8 @@ export default function Shell({ children }) {
       <aside className="side">
         <Sidebar path={path} onNav={() => {}} dark={dark} setDark={setDark}/>
       </aside>
+      <Brand onClick={() => {}}/>
+
 
       {/* ── mobile drawer overlay ── */}
       {drawerOpen && (
@@ -142,6 +144,7 @@ export default function Shell({ children }) {
 
       {/* ── main content ── */}
       <div className="main-wrap">
+        
         {/* mobile top bar */}
         <header className="top">
           <button aria-label="Open menu" onClick={() => setDrawerOpen(true)}
@@ -150,7 +153,7 @@ export default function Shell({ children }) {
   <Svg d={MENU_IC} style={{ width:24,height:24 }}/>
   </button>
 
-          <Brand/>
+          <Brand onClick={() => setDrawerOpen(false)}/>
           <button aria-label="Toggle theme" onClick={() => setDark(d => !d)}
             style={{ margin:0,padding:6,background:'none',border:'none',
               color:'var(--muted)',cursor:'pointer' }}>
