@@ -187,17 +187,13 @@ export default function Dashboard() {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 14 }}>
-          
-          <div style={{ background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 14, padding: 18, overflow: 'hidden' }}>
+          <div style={{ background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 14, padding: 18 }}>
             <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>Expenses breakdown</div>
-
             <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 14 }}>By category — {monthLabel(month)}</div>
             {expByCategory.length === 0
               ? <p style={{ color: 'var(--muted)', fontSize: 13 }}>No expenses recorded.</p>
               : <>
-                <div style={{ position: 'relative', width: 160, height: 160, margin: '0 auto 14px', touchAction: 'none', overflow: 'hidden', borderRadius: '50%' }}>
-                
-
+                <div style={{ position: 'relative', width: 160, height: 160, margin: '8px auto 22px', touchAction: 'none' }}>
                   <DonutChart data={expByCategory} colors={CAT_COLORS} />
                   <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
                     <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--ink)' }}>MVR {Math.round(curExp / 1000)}k</span>
@@ -220,7 +216,7 @@ export default function Dashboard() {
               </>}
           </div>
 
-          <div style={{ background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 14, padding: 18 }}>
+          <div style={{ background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 14, padding: 18, overflow: 'hidden' }}>
             <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>Monthly revenue</div>
             <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 14 }}>Income over the last 8 months</div>
             <div style={{ position: 'relative', width: '100%', height: 220 }}>
