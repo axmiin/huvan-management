@@ -12,7 +12,8 @@ h2{font-size:14px;font-weight:600;margin:0 0 10px}
 .muted{color:var(--muted)}
 
 /* ── shell layout ── */
-.shell{display:flex;min-height:100vh;width:100%;overflow-x:hidden}
+.shell{display:flex;min-height:100vh;width:100%}
+
 
 /* ── desktop sidebar ── */
 .side{width:220px;flex:none;position:sticky;top:0;height:100vh;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column}
