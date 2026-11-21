@@ -195,7 +195,7 @@ export default function Dashboard() {
               : <>
                 
                 
-                <div style={{ position: 'relative', width: 180, height: 180, margin: '8px auto 22px', touchAction: 'none' }}>
+                <div style={{ position: 'relative', width: 180, height: 180, margin: '13px auto 28px', touchAction: 'none' }}>
 
 
                   <DonutChart data={expByCategory} colors={CAT_COLORS} />
