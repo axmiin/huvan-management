@@ -194,7 +194,9 @@ export default function Dashboard() {
               ? <p style={{ color: 'var(--muted)', fontSize: 13 }}>No expenses recorded.</p>
               : <>
                 
-                <div style={{ position: 'relative', width: 160, height: 160, margin: '12px auto 22px', touchAction: 'none', padding: 10 }}>
+                
+                <div style={{ position: 'relative', width: 180, height: 180, margin: '8px auto 22px', touchAction: 'none' }}>
+
 
                   <DonutChart data={expByCategory} colors={CAT_COLORS} />
                   <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
