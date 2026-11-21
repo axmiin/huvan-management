@@ -31,7 +31,8 @@ h2{font-size:14px;font-weight:600;margin:0 0 10px}
 .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:99}
 
 /* ── top bar (mobile only) ── */
-.top{display:none}
+.top{display:none;position:sticky;top:0;z-index:10}
+
 
 /* ── main content ── */
 .main-wrap{flex:1;min-width:0;max-width:100%;overflow-x:hidden;display:flex;flex-direction:column}
