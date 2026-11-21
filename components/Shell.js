@@ -49,12 +49,13 @@ function Sidebar({ path, onNav, dark, setDark }) {
         ))}
       </nav>
       <span className="sp"/>
-      <button className="nl" onClick={() => setDark(d => !d)}
-        style={{ justifyContent:'flex-start' }}>
+      <button className="nl" onClick={() => { setDark(d => !d); onNav(); }}
+  style={{ justifyContent:'flex-start' }}>
         <Svg d={dark ? SUN_IC : MOON_IC}/>
         {dark ? 'Light mode' : 'Dark mode'}
       </button>
-      <button className="nl signout" onClick={() => sb.auth.signOut()}>
+      
+      <button className="nl signout" onClick={() => { sb.auth.signOut(); onNav(); }}>
         <Svg d={OUT_IC}/>Sign out
       </button>
     </div>
