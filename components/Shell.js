@@ -124,7 +124,6 @@ export default function Shell({ children }) {
       <aside className="side">
         <Sidebar path={path} onNav={() => {}} dark={dark} setDark={setDark}/>
       </aside>
-      <Brand onClick={() => {}}/>
 
 
       {/* ── mobile drawer overlay ── */}
