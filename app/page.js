@@ -187,8 +187,10 @@ export default function Dashboard() {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 14 }}>
-          <div style={{ background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 14, padding: 18 }}>
+          
+          <div style={{ background: 'var(--panel)', border: '1px solid var(--line)', borderRadius: 14, padding: 18, overflow: 'hidden' }}>
             <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>Expenses breakdown</div>
+
             <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 14 }}>By category — {monthLabel(month)}</div>
             {expByCategory.length === 0
               ? <p style={{ color: 'var(--muted)', fontSize: 13 }}>No expenses recorded.</p>
