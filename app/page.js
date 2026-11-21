@@ -193,7 +193,8 @@ export default function Dashboard() {
             {expByCategory.length === 0
               ? <p style={{ color: 'var(--muted)', fontSize: 13 }}>No expenses recorded.</p>
               : <>
-                <div style={{ position: 'relative', width: 160, height: 160, margin: '0 auto 14px', touchAction: 'none' }}>
+                <div style={{ position: 'relative', width: 160, height: 160, margin: '0 auto 14px', touchAction: 'none', overflow: 'hidden', borderRadius: '50%' }}>
+                
 
                   <DonutChart data={expByCategory} colors={CAT_COLORS} />
                   <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
