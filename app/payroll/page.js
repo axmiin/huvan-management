@@ -47,7 +47,7 @@ function Payslip({ p, staff, accounts, no, onClose }) {
   return (
     <Modal title="Payslip" onClose={onClose}>
       <div id="payslip-inner" style={slipStyle}>
-        <div style={{ background:'#634029',padding:'18px 18px 0' }}>
+        <div style={{ background:'#8A7356',padding:'18px 18px 0' }}>
           <div style={{ display:'flex',justifyContent:'space-between',alignItems:'flex-start' }}>
             <img src={LOGO} alt="Logo" style={{ width:56,height:56,borderRadius:8,objectFit:'cover' }}/>
             <div style={{ textAlign:'right' }}>
