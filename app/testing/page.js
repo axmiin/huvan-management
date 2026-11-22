@@ -92,7 +92,7 @@ function SlipB() {
     <div style={{ background:'#fff', borderRadius:20, width:'100%', maxWidth:400,
       boxShadow:'0 2px 24px rgba(0,0,0,0.08)', overflow:'hidden', fontFamily:'system-ui,sans-serif' }}>
       {/* top strip */}
-      <div style={{ background:'#1a1410', padding:'24px 24px 28px' }}>
+      <div style={{ background:'#d6b08c', padding:'24px 24px 28px' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:20 }}>
           <img src={LOGO} alt="Logo" style={{ width:36, height:36, borderRadius:8, objectFit:'cover' }}/>
           <div style={{ textAlign:'right' }}>
