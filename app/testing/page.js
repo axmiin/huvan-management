@@ -23,20 +23,20 @@ const net = sample.basic + sample.bonus - sample.deduction;
 /* ── Option A: Clean minimal card ── */
 function SlipA() {
   return (
-    <div style={{ background:'#bcaa8e', borderRadius:20, width:'100%', maxWidth:400,
+    <div style={{ background:'#fff', borderRadius:20, width:'100%', maxWidth:400,
       boxShadow:'0 2px 24px rgba(0,0,0,0.08)', overflow:'hidden', fontFamily:'system-ui,sans-serif' }}>
       {/* header */}
       <div style={{ padding:'24px 24px 20px', borderBottom:'1px solid #f0ede9',
         display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
         <div>
           <img src={LOGO} alt="Logo" style={{ width:40, height:40, borderRadius:10, objectFit:'cover', marginBottom:12 }}/>
-          <div style={{ fontSize:18, fontWeight:700, color:'#1a1410', letterSpacing:'-.02em' }}>{sample.name}</div>
-          <div style={{ fontSize:13, color:'#9a8880', marginTop:2 }}>{sample.position}</div>
+          <div style={{ fontSize:18, fontWeight:700, color:'#fff', letterSpacing:'-.02em' }}>{sample.name}</div>
+          <div style={{ fontSize:13, color:'rgba(255,255,255,0.7)', marginTop:2 }}>{sample.position}</div>
         </div>
         <div style={{ textAlign:'right' }}>
-          <div style={{ fontSize:11, color:'#c19a6b', fontWeight:600, letterSpacing:'.06em', textTransform:'uppercase', marginBottom:4 }}>Payslip</div>
-          <div style={{ fontSize:13, fontWeight:600, color:'#1a1410' }}>{sample.no}</div>
-          <div style={{ fontSize:12, color:'#9a8880', marginTop:2 }}>{sample.month}</div>
+          <div style={{ fontSize:11, color:'rgba(255,255,255,0.7)', fontWeight:600, letterSpacing:'.06em', textTransform:'uppercase', marginBottom:4 }}>Payslip</div>
+          <div style={{ fontSize:13, fontWeight:600, color:'#fff' }}>{sample.no}</div>
+          <div style={{ fontSize:12, color:'rgba(255,255,255,0.65)', marginTop:2 }}>{sample.month}</div>
         </div>
       </div>
       {/* net pay */}
@@ -67,7 +67,7 @@ function SlipA() {
       </div>
       {/* meta */}
       <div style={{ padding:'0 24px 20px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
-        {[['Payment date', sample.date], ['Paid via', sample.account], ['Period', sample.month], ['Issued by', sample.owner]].map(([l, v]) => (
+        {[['Payment date', sample.date], ['Period', sample.month]].map(([l, v]) => (
           <div key={l} style={{ background:'#faf8f6', borderRadius:10, padding:'10px 12px' }}>
             <div style={{ fontSize:10, color:'#9a8880', marginBottom:3 }}>{l}</div>
             <div style={{ fontSize:12, fontWeight:600, color:'#1a1410' }}>{v}</div>
@@ -92,7 +92,7 @@ function SlipB() {
     <div style={{ background:'#fff', borderRadius:20, width:'100%', maxWidth:400,
       boxShadow:'0 2px 24px rgba(0,0,0,0.08)', overflow:'hidden', fontFamily:'system-ui,sans-serif' }}>
       {/* top strip */}
-      <div style={{ background:'#8a7356', padding:'24px 24px 28px' }}>
+      <div style={{ background:'#1a1410', padding:'24px 24px 28px' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:20 }}>
           <img src={LOGO} alt="Logo" style={{ width:36, height:36, borderRadius:8, objectFit:'cover' }}/>
           <div style={{ textAlign:'right' }}>
