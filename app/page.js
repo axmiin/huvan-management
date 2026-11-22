@@ -20,6 +20,7 @@ function DonutChart({ data, colors }) {
           plugins: {
             legend: { display: false },
             tooltip: {
+              enabled: false,
               backgroundColor: isDark ? '#1e1e2e' : '#fff', titleColor: isDark ? '#f0efec' : '#0b0b0b',
               bodyColor: isDark ? '#c3c2b7' : '#52514e', borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
               borderWidth: 1, padding: 10, cornerRadius: 8,
@@ -194,11 +195,8 @@ export default function Dashboard() {
               ? <p style={{ color: 'var(--muted)', fontSize: 13 }}>No expenses recorded.</p>
               : <>
                 
-                
-                
-            //    <div style={{ position: 'relative', width: 180, height: 180, maxWidth: '100%', margin: '13px auto 45px' }}>
-                <div style={{ position: 'relative', width: 220, height: 220, maxWidth: '100%', margin: '13px auto 45px' }}>
-
+            <div style={{ position: 'relative', width: 180, height: 180, maxWidth: '100%', margin: '13px auto 45px' }}>
+            
                   <DonutChart data={expByCategory} colors={CAT_COLORS} />
                   <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
                     <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--ink)' }}>MVR {Math.round(curExp / 1000)}k</span>
