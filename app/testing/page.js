@@ -7,7 +7,7 @@ const f = (n) => Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, m
 
 const sample = {
   no: 'PS2026/001',
-  name: 'Ibrahim Ziyad',
+  name: 'Ibrahim Ziyad 1',
   position: 'Waiter',
   month: 'November 2026',
   basic: 2000,
