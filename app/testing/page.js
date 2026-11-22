@@ -46,7 +46,9 @@ function SlipA() {
         <div style={{ fontSize:32, fontWeight:700, color:'#1a1410', letterSpacing:'-.03em' }}>MVR {f(net)}</div>
       </div>
       {/* breakdown */}
-      <div style={{ padding:'20px 24px' }}>
+      
+      <div style={{ padding:'20px 24px', background:'#fff' }}>
+
         <div style={{ fontSize:11, color:'#9a8880', fontWeight:600, letterSpacing:'.06em', textTransform:'uppercase', marginBottom:12 }}>Breakdown</div>
         {[
           ['Basic salary', sample.basic, false],
@@ -67,7 +69,9 @@ function SlipA() {
         </div>
       </div>
       {/* meta */}
-      <div style={{ padding:'0 24px 20px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+      
+      <div style={{ padding:'0 24px 20px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, background:'#fff' }}>
+
         {[['Payment date', sample.date], ['Period', sample.month]].map(([l, v]) => (
           <div key={l} style={{ background:'#faf8f6', borderRadius:10, padding:'10px 12px' }}>
             <div style={{ fontSize:10, color:'#9a8880', marginBottom:3 }}>{l}</div>
@@ -76,8 +80,10 @@ function SlipA() {
         ))}
       </div>
       {/* footer */}
+     
       <div style={{ padding:'14px 24px', borderTop:'1px solid #f0ede9',
-        display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+        display:'flex', justifyContent:'space-between', alignItems:'center', background:'#fff' }}>
+
         <div style={{ fontSize:11, color:'#9a8880', lineHeight:1.6 }}>
           Authorised by<br/><strong style={{ fontSize:12, color:'#1a1410' }}>{sample.owner}</strong>
         </div>
