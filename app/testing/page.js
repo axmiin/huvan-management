@@ -23,10 +23,10 @@ const net = sample.basic + sample.bonus - sample.deduction;
 /* ── Option A: Clean minimal card ── */
 function SlipA() {
   return (
-    <div style={{ background:'#fff', borderRadius:20, width:'100%', maxWidth:400,
+        <div style={{ background:'#fff', borderRadius:20, width:'100%', maxWidth:400,
       boxShadow:'0 2px 24px rgba(0,0,0,0.08)', overflow:'hidden', fontFamily:'system-ui,sans-serif' }}>
-      {/* header */
-        <div style={{ padding:'24px 24px 20px', borderBottom:'1px solid #f0ede9',
+      {/* header */}
+      <div style={{ padding:'24px 24px 20px', borderBottom:'1px solid #f0ede9',
         display:'flex', justifyContent:'space-between', alignItems:'flex-start', background:'#8A7356' }}>
 
         <div>
