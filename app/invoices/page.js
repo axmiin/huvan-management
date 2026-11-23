@@ -33,7 +33,7 @@ const Btn = ({ alt, danger, style:s, ...p }) => <button style={{ margin:0,paddin
 const Field = ({ label, children, style:s }) => <div style={{ marginBottom:10,...s }}><label style={{ display:'block',fontSize:11,fontWeight:500,color:'var(--muted)',marginBottom:3 }}>{label}</label>{children}</div>;
 
 
- ── modal ─────────────────────────────────────────────────
+ // ── modal ─────────────────────────────────────────────────
 const Modal = ({ title, onClose, children, wide }) => (
  <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:60,display:'flex',alignItems:'center',justifyContent:'center',padding:16 }}
  onClick={(e)=>e.target===e.currentTarget&&onClose()}>
