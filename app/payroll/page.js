@@ -43,49 +43,60 @@ function Payslip({ p, staff, accounts, no, onClose }) {
     w.document.write('</body></html>');
     w.document.close(); w.focus(); setTimeout(()=>w.print(),400);
   };
-  const slipStyle = { background:'#fff',width:'100%',maxWidth:400,borderRadius:16,overflow:'hidden',fontFamily:'system-ui,sans-serif',color:'#2b1d0e' };
   return (
     <Modal title="Payslip" onClose={onClose}>
-      <div id="payslip-inner" style={slipStyle}>
-        <div style={{ background:'#8A7356',padding:'18px 18px 0' }}>
-          <div style={{ display:'flex',justifyContent:'space-between',alignItems:'flex-start' }}>
-            <img src={LOGO} alt="Logo" style={{ width:56,height:56,borderRadius:8,objectFit:'cover' }}/>
-            <div style={{ textAlign:'right' }}>
-              <div style={{ color:'rgba(255,255,255,.65)',fontSize:10,letterSpacing:'.07em',textTransform:'uppercase' }}>Payslip</div>
-              <div style={{ color:'#fff',fontSize:13,fontWeight:600,marginTop:2 }}>{no}</div>
+      <div id="payslip-inner" style={{ background:'#fff',borderRadius:20,width:'100%',maxWidth:400,overflow:'hidden',fontFamily:'system-ui,sans-serif' }}>
+        {/* header */}
+        <div style={{ background:'#8A7356',padding:'20px 24px',display:'flex',justifyContent:'space-between',alignItems:'flex-start' }}>
+          <div>
+            <img src={LOGO} alt="Logo" style={{ width:40,height:40,borderRadius:10,objectFit:'cover',marginBottom:12 }}/>
+            <div style={{ fontSize:18,fontWeight:700,color:'#fff',letterSpacing:'-.02em' }}>{st.name}</div>
+            <div style={{ fontSize:13,color:'rgba(255,255,255,0.7)',marginTop:2 }}>{st.position}</div>
+          </div>
+          <div style={{ textAlign:'right' }}>
+            <div style={{ fontSize:11,color:'rgba(255,255,255,0.7)',fontWeight:600,letterSpacing:'.06em',textTransform:'uppercase',marginBottom:4 }}>Payslip</div>
+            <div style={{ fontSize:13,fontWeight:600,color:'#fff' }}>{no}</div>
+            <div style={{ fontSize:12,color:'rgba(255,255,255,0.65)',marginTop:2 }}>{monthLabel(p.pay_month)}</div>
+          </div>
+        </div>
+        {/* net pay */}
+        <div style={{ padding:'20px 24px',background:'#faf8f6',borderBottom:'1px solid #f0ede9' }}>
+          <div style={{ fontSize:11,color:'#9a8880',fontWeight:600,letterSpacing:'.06em',textTransform:'uppercase',marginBottom:6 }}>Net pay</div>
+          <div style={{ fontSize:32,fontWeight:700,color:'#1a1410',letterSpacing:'-.03em' }}>MVR {f(p.net_pay)}</div>
+        </div>
+        {/* breakdown */}
+        <div style={{ padding:'20px 24px',background:'#fff' }}>
+          <div style={{ fontSize:11,color:'#9a8880',fontWeight:600,letterSpacing:'.06em',textTransform:'uppercase',marginBottom:12 }}>Breakdown</div>
+          <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:'1px solid #f5f2ef' }}>
+            <span style={{ fontSize:13,color:'#5a4a42' }}>Basic salary</span>
+            <span style={{ fontSize:13,fontWeight:600,color:'#1a1410' }}>MVR {f(p.basic_salary)}</span>
+          </div>
+          {+p.bonus>0 && <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:'1px solid #f5f2ef' }}>
+            <span style={{ fontSize:13,color:'#5a4a42' }}>Bonus</span>
+            <span style={{ fontSize:13,fontWeight:600,color:'#27ae60' }}>+ MVR {f(p.bonus)}</span>
+          </div>}
+          {+p.deduction>0 && <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:'1px solid #f5f2ef' }}>
+            <span style={{ fontSize:13,color:'#5a4a42' }}>{p.note||'Deduction'}</span>
+            <span style={{ fontSize:13,fontWeight:600,color:'#c0392b' }}>− MVR {f(p.deduction)}</span>
+          </div>}
+          <div style={{ display:'flex',justifyContent:'space-between',padding:'14px 0 0' }}>
+            <span style={{ fontSize:14,fontWeight:600,color:'#1a1410' }}>Net pay</span>
+            <span style={{ fontSize:14,fontWeight:700,color:'#c19a6b' }}>MVR {f(p.net_pay)}</span>
+          </div>
+        </div>
+        {/* meta */}
+        <div style={{ padding:'0 24px 20px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,background:'#fff' }}>
+          {[['Payment date',dmy(p.created_at?p.created_at.slice(0,10):today())],['Period',monthLabel(p.pay_month)]].map(([l,v])=>(
+            <div key={l} style={{ background:'#faf8f6',borderRadius:10,padding:'10px 12px' }}>
+              <div style={{ fontSize:10,color:'#9a8880',marginBottom:3 }}>{l}</div>
+              <div style={{ fontSize:12,fontWeight:600,color:'#1a1410' }}>{v}</div>
             </div>
-          </div>
-          <div style={{ padding:'12px 0 16px',color:'#fff' }}>
-            <div style={{ fontSize:20,fontWeight:700 }}>{st.name}</div>
-            <div style={{ fontSize:12,color:'rgba(255,255,255,.6)',marginTop:3 }}>{st.position} · Huvan Café</div>
-            <div style={{ display:'inline-block',background:'rgba(255,255,255,.15)',color:'#fff',fontSize:11,fontWeight:500,padding:'3px 10px',borderRadius:20,marginTop:8 }}>{monthLabel(p.pay_month)}</div>
-          </div>
+          ))}
         </div>
-        <div style={{ background:'#C19A6B',padding:'12px 18px',display:'flex',justifyContent:'space-between',alignItems:'center' }}>
-          <div style={{ fontSize:10,textTransform:'uppercase',letterSpacing:'.07em',color:'rgba(43,29,14,.6)',fontWeight:600 }}>Net Pay</div>
-          <div style={{ fontSize:22,fontWeight:700,color:'#2b1d0e' }}>MVR {f(p.net_pay)}</div>
-        </div>
-        <div style={{ padding:'16px 18px' }}>
-          <div style={{ fontSize:10,textTransform:'uppercase',letterSpacing:'.07em',color:'#9a8880',fontWeight:600,marginBottom:8 }}>Earnings</div>
-          <div style={{ display:'flex',justifyContent:'space-between',padding:'7px 0',borderBottom:'1px solid #f2ede9' }}><span style={{ fontSize:13,color:'#5a4a42' }}>Basic salary</span><span style={{ fontSize:13,fontWeight:600 }}>{f(p.basic_salary)}</span></div>
-          {+p.bonus>0 && <div style={{ display:'flex',justifyContent:'space-between',padding:'7px 0',borderBottom:'1px solid #f2ede9' }}><span style={{ fontSize:13,color:'#5a4a42' }}>Bonus</span><span style={{ fontSize:13,fontWeight:600,color:'#27ae60' }}>+ {f(p.bonus)}</span></div>}
-          {+p.deduction>0 && <>
-            <div style={{ height:1,background:'#f2ede9',margin:'2px 0 10px' }}></div>
-            <div style={{ fontSize:10,textTransform:'uppercase',letterSpacing:'.07em',color:'#9a8880',fontWeight:600,marginBottom:8 }}>Deductions</div>
-            <div style={{ display:'flex',justifyContent:'space-between',padding:'7px 0',borderBottom:'1px solid #f2ede9' }}><span style={{ fontSize:13,color:'#5a4a42' }}>{p.note||'Deduction'}</span><span style={{ fontSize:13,fontWeight:600,color:'#c0392b' }}>− {f(p.deduction)}</span></div>
-          </>}
-          <div style={{ height:1,background:'#f2ede9',margin:'4px 0 10px' }}></div>
-          <div style={{ display:'flex',justifyContent:'space-between',paddingTop:4 }}><span style={{ fontSize:13,fontWeight:600 }}>Net pay</span><span style={{ fontSize:15,fontWeight:700,color:'#634029' }}>MVR {f(p.net_pay)}</span></div>
-          <div style={{ background:'#f9f6f3',borderRadius:10,padding:'10px 12px',marginTop:12,display:'grid',gridTemplateColumns:'1fr 1fr',gap:8 }}>
-            <div><div style={{ fontSize:10,color:'#9a8880',marginBottom:2 }}>Payment date</div><div style={{ fontSize:11,fontWeight:600 }}>{dmy(p.created_at ? p.created_at.slice(0,10) : today())}</div></div>
-            <div><div style={{ fontSize:10,color:'#9a8880',marginBottom:2 }}>Paid via</div><div style={{ fontSize:11,fontWeight:600 }}>{ac.name}</div></div>
-            <div><div style={{ fontSize:10,color:'#9a8880',marginBottom:2 }}>Period</div><div style={{ fontSize:11,fontWeight:600 }}>{monthLabel(p.pay_month)}</div></div>
-            <div><div style={{ fontSize:10,color:'#9a8880',marginBottom:2 }}>Issue date</div><div style={{ fontSize:11,fontWeight:600 }}>{dmy(today())}</div></div>
-          </div>
-        </div>
-        <div style={{ padding:'12px 18px',display:'flex',justifyContent:'space-between',alignItems:'center',borderTop:'1px solid #f2ede9' }}>
-          <div style={{ fontSize:11,color:'#9a8880',lineHeight:1.6 }}>Authorised by<br/><strong style={{ fontSize:12,color:'#2b1d0e' }}>{OWNER}</strong></div>
-          <img src={STAMP} alt="Stamp" style={{ width:56,height:56,objectFit:'contain',opacity:.85 }}/>
+        {/* footer */}
+        <div style={{ padding:'14px 24px',borderTop:'1px solid #f0ede9',display:'flex',justifyContent:'space-between',alignItems:'center',background:'#fff' }}>
+          <div style={{ fontSize:11,color:'#9a8880',lineHeight:1.6 }}>Authorised by<br/><strong style={{ fontSize:12,color:'#1a1410' }}>{OWNER}</strong></div>
+          <img src={STAMP} alt="Stamp" style={{ width:52,height:52,objectFit:'contain',opacity:.8 }}/>
         </div>
       </div>
       <div style={{ display:'flex',gap:8,marginTop:14 }}>
