@@ -33,7 +33,7 @@ const Btn = ({ alt, danger, style:s, ...p }) => <button style={{ margin:0,paddin
 const Field = ({ label, children, style:s }) => <div style={{ marginBottom:10,...s }}><label style={{ display:'block',fontSize:11,fontWeight:500,color:'var(--muted)',marginBottom:3 }}>{label}</label>{children}</div>;
 
 
-/* ── modal ─────────────────────────────────────────────────
+ ── modal ─────────────────────────────────────────────────
 const Modal = ({ title, onClose, children, wide }) => (
  <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:60,display:'flex',alignItems:'center',justifyContent:'center',padding:16 }}
  onClick={(e)=>e.target===e.currentTarget&&onClose()}>
@@ -46,21 +46,7 @@ const Modal = ({ title, onClose, children, wide }) => (
  </div>
  </div>
 );
-*/
 
-const Modal = ({ title, onClose, children }) => (
-  <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:50,display:'flex',alignItems:'flex-end',justifyContent:'center' }}
-    onClick={(e)=>e.target===e.currentTarget&&onClose()}>
-    <div style={{ background:'#f0ece8',borderRadius:'16px 16px 0 0',padding:20,width:'100%',maxWidth:440,
-      paddingBottom:'calc(20px + env(safe-area-inset-bottom))',maxHeight:'90vh',overflowY:'auto' }}>
- <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16 }}>
- <span style={{ fontSize:15,fontWeight:600 }}>{title}</span>
- <button onClick={onClose} style={{ margin:0,padding:'4px 8px',background:'none',border:'none',color:'var(--muted)',cursor:'pointer',fontSize:20,lineHeight:1 }}>✕</button>
- </div>
- {children}
- </div>
- </div>
-);
 
 
 
