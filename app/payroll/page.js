@@ -48,7 +48,9 @@ function Payslip({ p, staff, accounts, no, onClose }) {
   
 
   return (
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" async/>
+    <>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" async/>
+      <Modal title="Payslip" onClose={onClose}>
 
     <Modal title="Payslip" onClose={onClose}>
       <div id="payslip-inner" style={{ background:'#fff',borderRadius:20,width:'100%',maxWidth:400,overflow:'hidden',fontFamily:'system-ui,sans-serif' }}>
@@ -109,9 +111,10 @@ function Payslip({ p, staff, accounts, no, onClose }) {
         <Btn alt full onClick={onClose}>Close</Btn>
         <Btn full onClick={print}>Download / Print</Btn>
       </div>
-    </Modal>
+      </Modal>
+    </>
   );
-}
+
 
 export default function Payroll() {
   const [role, setRole] = useState(null);
