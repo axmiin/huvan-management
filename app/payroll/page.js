@@ -36,13 +36,17 @@ function Payslip({ p, staff, accounts, no, onClose }) {
   const st = staff.find((x)=>x.id===p.staff_id)||{};
   const ac = accounts.find((x)=>x.id===p.account_id)||{};
   const monthLabel = (m) => { const [y,mo]=m.split('-'); return new Date(y,mo-1,1).toLocaleString('en-US',{month:'long',year:'numeric'}); };
-  const print = () => {
-    const w = window.open('','_blank');
-    w.document.write('<html><head><title>Payslip '+no+'</title><style>*{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}body{font-family:system-ui,sans-serif}@media print{@page{size:A5 portrait;margin:0}}</style></head><body>');
-    w.document.write(document.getElementById('payslip-inner').outerHTML);
-    w.document.write('</body></html>');
-    w.document.close(); w.focus(); setTimeout(()=>w.print(),400);
+  const print = async () => {
+    if (!window.html2canvas) return alert('Still loading, try again.');
+    const el = document.getElementById('payslip-inner');
+    const c = await window.html2canvas(el, { scale:3, backgroundColor:'#fff', useCORS:true });
+    const a = document.createElement('a');
+    a.href = c.toDataURL('image/png');
+    a.download = 'Payslip-' + no.replace(/[^\w-]/g,'-') + '.png';
+    a.click();
   };
+  
+
   return (
     <Modal title="Payslip" onClose={onClose}>
       <div id="payslip-inner" style={{ background:'#fff',borderRadius:20,width:'100%',maxWidth:400,overflow:'hidden',fontFamily:'system-ui,sans-serif' }}>
