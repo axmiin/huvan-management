@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { sb } from '../lib/supabase';
 
-const Svg = ({ d, style }) => (
+const Svg = ({ d }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
-    strokeLinecap="round" strokeLinejoin="round" style={{ width:18,height:18,flex:'none',...style }}>
+    strokeLinecap="round" strokeLinejoin="round" style={{ width:18,height:18,flex:'none' }}>
     <path d={d}/>
   </svg>
 );
@@ -16,12 +16,12 @@ const NAV = [
   ['/sales/',    'Sales & Income', 'M23 6l-9.5 9.5-5-5L1 18 M17 6h6v6'],
   ['/expenses/', 'Expenses',       'M5 2h14v20l-3-2-2 2-2-2-2 2-2-2-3 2z M9 7h6 M9 11h6'],
   ['/cash/',     'Cash & Accounts','M3 7h18v12H3z M3 7l2-3h14l2 3 M16 13h2'],
-  ['/payroll/',  'Payroll',        'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M23 21v-2a4 4 0 0 0-3-3.9 M16 3.1a4 4 0 0 1 0 7.8'],
+  ['/payroll/',  'Payroll',        'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M23 21v-2a4 4 0 0 0-3-3.9 M16 3.1a4 4 0 1 0 7.8'],
   ['/invoices/', 'Invoices',       'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M8 13h8 M8 17h8'],
-  ['/settings/', 'Settings',       'M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z M12 8v4 M12 16h.01'],
+  ['/testing/', 'Testing', 'M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 1 2 2M9 21H5a2 2 0 0 0-2-2m0 0V5'],
 ];
 
-const MENU_IC  = 'M3 12h18 M3 6h18 M3 18h18';
+const MENU_IC = 'M3 12h18 M3 6h18 M3 18h18';
 const CLOSE_IC = 'M18 6L6 18 M6 6l12 12';
 const OUT_IC   = 'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4 M16 17l5-5-5-5 M21 12H9';
 const MOON_IC  = 'M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z';
@@ -34,10 +34,11 @@ const Brand = ({ onClick }) => (
   </Link>
 );
 
+
 function Sidebar({ path, onNav, dark, setDark }) {
   return (
     <div className="sidebar-inner">
-      <Brand onClick={onNav}/>
+      <Brand/>
       <nav className="sidenav">
         {NAV.map(([h,t,d]) => (
           <Link key={h} href={h}
@@ -49,11 +50,11 @@ function Sidebar({ path, onNav, dark, setDark }) {
       </nav>
       <span className="sp"/>
       <button className="nl" onClick={() => { setDark(d => !d); onNav(); }}
-        style={{ justifyContent:'flex-start' }}>
+  style={{ justifyContent:'flex-start' }}>
         <Svg d={dark ? SUN_IC : MOON_IC}/>
         {dark ? 'Light mode' : 'Dark mode'}
       </button>
-
+      
       <button className="nl signout" onClick={() => { onNav(); setTimeout(() => sb.auth.signOut(), 35); }}>
         <Svg d={OUT_IC}/>Sign out
       </button>
@@ -125,6 +126,7 @@ export default function Shell({ children }) {
         <Sidebar path={path} onNav={() => {}} dark={dark} setDark={setDark}/>
       </aside>
 
+
       {/* ── mobile drawer overlay ── */}
       {drawerOpen && (
         <div className="drawer-overlay" onClick={() => setDrawerOpen(false)}/>
@@ -142,13 +144,14 @@ export default function Shell({ children }) {
 
       {/* ── main content ── */}
       <div className="main-wrap">
+        
         {/* mobile top bar */}
         <header className="top">
           <button aria-label="Open menu" onClick={() => setDrawerOpen(true)}
-            style={{ margin:0,padding:10,background:'none',border:'none',
-              color:'var(--ink)',cursor:'pointer' }}>
-            <Svg d={MENU_IC} style={{ width:24,height:24 }}/>
-          </button>
+  style={{ margin:0,padding:10,background:'none',border:'none',
+    color:'var(--ink)',cursor:'pointer' }}>
+  <Svg d={MENU_IC} style={{ width:24,height:24 }}/>
+  </button>
 
           <Brand onClick={() => setDrawerOpen(false)}/>
           <button aria-label="Toggle theme" onClick={() => setDark(d => !d)}
