@@ -118,6 +118,8 @@ export default function Payroll() {
   const [month, setMonth] = useState(initM()), [modal, setModal] = useState(null), [err, setErr] = useState('');
   const [sf, setSf] = useState({ name:'',position:'',salary:'' });
   const [pf, setPf] = useState({ staff_id:'',pay_month:initM(),basic_salary:'',bonus:'0',deduction:'0',account_id:'',note:'' });
+  const [bonusRanges, setBonusRanges] = useState([]);
+
   const [editing, setEditing] = useState(null), [viewSlip, setViewSlip] = useState(null);
 
   useEffect(() => {
@@ -133,13 +135,24 @@ export default function Payroll() {
     });
   },[]);
 
+    const calcBonus = (revenue, ranges) => {
+    const sorted = [...ranges].sort((a,b) => a.revenue_from - b.revenue_from);
+    for (const r of sorted) {
+      if (revenue >= r.revenue_from && (r.revenue_to === null || revenue <= r.revenue_to))
+        return r.bonus_amount;
+    }
+    return 0;
+  };
   const load = async () => {
     const [s,p,a]=await Promise.all([
       sb.from('staff').select('*').order('name'),
       sb.from('payroll').select('*').order('created_at',{ascending:false}),
       sb.from('accounts').select('*').order('created_at'),
     ]);
-    if(s.data) setStaff(s.data);
+        if(s.data) setStaff(s.data);
+    const br = await sb.from('bonus_ranges').select('*');
+    if(br.data) setBonusRanges(br.data);
+
     if(p.data) setPayments(p.data);
     if(a.data) { setAccounts(a.data); setPf(x=>({...x,account_id:x.account_id||(a.data[0]?.id||'')})); }
   };
@@ -197,7 +210,13 @@ export default function Payroll() {
       <Btn alt onClick={()=>{setErr('');setModal('addstaff')}}>+ Add staff</Btn>
       <Btn onClick={()=>{
         const first=active[0];
-        setPf({staff_id:first?.id||'',pay_month:month,basic_salary:first?.salary||'',bonus:'0',deduction:'0',account_id:accounts[0]?.id||'',note:''});
+        (async () => {
+  const salesR = await sb.from('sales').select('amount').gte('entry_date', month+'-01').lte('entry_date', month+'-31');
+  const revenue = (salesR.data||[]).reduce((t,x) => t + +x.amount, 0);
+  const bonus = calcBonus(revenue, bonusRanges);
+  setPf({staff_id:first?.id||'',pay_month:month,basic_salary:first?.salary||'',bonus:String(bonus),deduction:'0',account_id:accounts[0]?.id||'',note:''});
+})();
+
         setErr('');setModal('payment');
       }}>💳 Record payment</Btn>
     </div>
@@ -284,7 +303,13 @@ export default function Payroll() {
       <Field label="Staff member *">
         <Sel value={pf.staff_id} onChange={e=>{
           const s2=staff.find(x=>x.id===e.target.value);
-          setPf({...pf,staff_id:e.target.value,basic_salary:s2?.salary||''});
+          (async () => {
+  const salesR = await sb.from('sales').select('amount').gte('entry_date', pf.pay_month+'-01').lte('entry_date', pf.pay_month+'-31');
+  const revenue = (salesR.data||[]).reduce((t,x) => t + +x.amount, 0);
+  const bonus = calcBonus(revenue, bonusRanges);
+  setPf({...pf,staff_id:e.target.value,basic_salary:s2?.salary||'',bonus:String(bonus)});
+})();
+
         }}>{active.map(s=><option key={s.id} value={s.id}>{s.name} — {f(s.salary)}</option>)}</Sel>
       </Field>
       <Field label="Month *"><input type="month" value={pf.pay_month} onChange={e=>setPf({...pf,pay_month:e.target.value})} style={{ width:'100%',padding:'9px 12px',border:'1px solid var(--line)',borderRadius:10,background:'var(--bg)',color:'var(--ink)',font:'inherit' }}/></Field>
