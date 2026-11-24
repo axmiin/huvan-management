@@ -4,15 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { sb } from '../lib/supabase';
 
-const Svg = ({ d }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
-    strokeLinecap="round" strokeLinejoin="round" style={{ width:18,height:18,flex:'none' }}>
-    <path d={d}/>
-  </svg>
-);
-
 const NAV = [
-  ['/',          'Dashboard',      'M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z'],
   ['/sales/',    'Sales & Income', 'M23 6l-9.5 9.5-5-5L1 18 M17 6h6v6'],
   ['/expenses/', 'Expenses',       'M5 2h14v20l-3-2-2 2-2-2-2 2-2-2-3 2z M9 7h6 M9 11h6'],
   ['/cash/',     'Cash & Accounts','M3 7h18v12H3z M3 7l2-3h14l2 3 M16 13h2'],
@@ -34,17 +26,16 @@ const Brand = ({ onClick }) => (
   </Link>
 );
 
-
 function Sidebar({ path, onNav, dark, setDark }) {
   return (
     <div className="sidebar-inner">
       <Brand/>
-      <nav className="sidenav">
-        {NAV.map(([h,t,d]) => (
-          <Link key={h} href={h}
-            className={'nl'+(path===h?' on':'')}
-            onClick={onNav}>
-            <Svg d={d}/>{t}
+
+      <nav>
+        {NAV.map(([href, label, d]) => (
+          <Link key={href} href={href} onClick={onNav}
+            className={'nl' + (path.startsWith(href) ? ' active' : '')}>
+            <Svg d={d}/>{label}
           </Link>
         ))}
       </nav>
@@ -62,11 +53,18 @@ function Sidebar({ path, onNav, dark, setDark }) {
   );
 }
 
+function Svg({ d, style }) {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"
+    strokeLinecap="round" strokeLinejoin="round" style={style} aria-hidden="true">
+    <path d={d}/>
+  </svg>;
+}
+
 export default function Shell({ children }) {
-  const [session, setSession]       = useState(undefined);
-  const [em, setEm]                 = useState('');
-  const [pw, setPw]                 = useState('');
-  const [err, setErr]               = useState('');
+  const [session, setSession] = useState(undefined);
+  const [email, setEmail]     = useState('');
+  const [pw, setPw]           = useState('');
+  const [err, setErr]         = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [dark, setDark]             = useState(false);
   const path = usePathname();
@@ -93,28 +91,39 @@ export default function Shell({ children }) {
   // close drawer on route change
   useEffect(() => { setDrawerOpen(false); }, [path]);
 
-  // lock body scroll when drawer open
-  useEffect(() => {
-    document.body.style.overflow = drawerOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
-  }, [drawerOpen]);
+  async function login(e) {
+    e.preventDefault();
+    setErr('');
+    const { error } = await sb.auth.signInWithPassword({ email, password: pw });
+    if (error) setErr(error.message);
+  }
 
-  if (session === undefined) return null;
+  if (session === undefined) return (
+    <div style={{ minHeight:'100vh', display:'grid', placeItems:'center', background:'var(--bg)' }}>
+      <div className="brand"><span className="logo">H</span><span>Loading...</span></div>
+    </div>
+  );
 
   if (!session) return (
-    <div className="login">
-      <form className="card" onSubmit={async (e) => {
-        e.preventDefault();
-        const r = await sb.auth.signInWithPassword({ email: em.trim(), password: pw });
-        setErr(r.error ? 'Sign-in failed. Check your email and password.' : '');
-      }}>
-        <Brand/>
-        <label>Email</label>
-        <input type="email" value={em} onChange={e => setEm(e.target.value)}/>
-        <label>Password</label>
-        <input type="password" value={pw} onChange={e => setPw(e.target.value)}/>
-        <button type="submit" style={{ width:'100%' }}>Sign in</button>
-        <p className="err">{err}</p>
+    <div className="login-page">
+      <style>{`
+        .login-page{min-height:100vh;display:grid;place-items:center;background:var(--bg);padding:24px}
+        .login-card{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:32px}
+        .login-card h1{font-size:20px;margin:0 0 6px}
+        .login-card p{color:var(--muted);font-size:13px;margin:0 0 24px}
+        .login-card input{width:100%;height:42px;margin-bottom:12px;padding:0 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--ink);font-size:14px}
+        .login-card button{width:100%;height:42px;border:0;border-radius:6px;background:var(--accent);color:#fff;font-weight:600;font-size:14px;cursor:pointer}
+      `}</style>
+      <form className="login-card" onSubmit={login}>
+        <div className="brand" style={{ marginBottom:24 }}>
+          <span className="logo">H</span><span>Huvan Management</span>
+        </div>
+        <h1>Sign in</h1>
+        <p>Use your account to continue</p>
+        {err && <div style={{ color:'#c0392b',fontSize:13,marginBottom:12 }}>{err}</div>}
+        <input type="email" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} required/>
+        <input type="password" placeholder="Password" value={pw} onChange={e=>setPw(e.target.value)} required/>
+        <button type="submit">Sign in</button>
       </form>
     </div>
   );
@@ -126,16 +135,15 @@ export default function Shell({ children }) {
         <Sidebar path={path} onNav={() => {}} dark={dark} setDark={setDark}/>
       </aside>
 
-
       {/* ── mobile drawer overlay ── */}
       {drawerOpen && (
         <div className="drawer-overlay" onClick={() => setDrawerOpen(false)}/>
       )}
-      <aside className={'drawer'+(drawerOpen?' drawer-open':'')}>
-        <div style={{ display:'flex',justifyContent:'flex-end',padding:'12px 12px 0' }}>
-          <button onClick={() => setDrawerOpen(false)}
-            style={{ margin:0,padding:6,background:'none',border:'none',
-              color:'var(--muted)',cursor:'pointer' }}>
+
+      {/* ── mobile drawer ── */}
+      <aside className={'drawer' + (drawerOpen ? ' open' : '')}>
+        <div className="drawer-head">
+          <button className="drawer-close" aria-label="Close menu" onClick={() => setDrawerOpen(false)}>
             <Svg d={CLOSE_IC}/>
           </button>
         </div>
@@ -149,9 +157,9 @@ export default function Shell({ children }) {
         <header className="top">
           <button aria-label="Open menu" onClick={() => setDrawerOpen(true)}
   style={{ margin:0,padding:10,background:'none',border:'none',
-    color:'var(--ink)',cursor:'pointer' }}>
+              color:'var(--ink)',cursor:'pointer' }}>
   <Svg d={MENU_IC} style={{ width:24,height:24 }}/>
-  </button>
+          </button>
 
           <Brand onClick={() => setDrawerOpen(false)}/>
           <button aria-label="Toggle theme" onClick={() => setDark(d => !d)}
