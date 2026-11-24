@@ -109,10 +109,10 @@ function Payslip({ p, staff, accounts, no, onClose }) {
         <Btn alt full onClick={onClose}>Close</Btn>
         <Btn full onClick={print}>Download / Print</Btn>
       </div>
-      </Modal>
+  </Modal>
     </>
   );
-
+}
 
 export default function Payroll() {
   const [role, setRole] = useState(null);
