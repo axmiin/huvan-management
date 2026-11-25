@@ -213,16 +213,30 @@ export default function Payroll() {
     <div style={{ display:'flex',gap:10,marginBottom:20,flexWrap:'wrap' }}>
       <Btn alt onClick={()=>{setErr('');setModal('addstaff')}}>+ Add staff</Btn>
       <Btn onClick={()=>{
-        const first=active[0];
-        (async () => {
-  const salesR = await sb.from('sales').select('amount').gte('entry_date', month+'-01').lte('entry_date', month+'-31');
-  const revenue = (salesR.data||[]).reduce((t,x) => t + +x.amount, 0);
-  const bonus = calcBonus(revenue, bonusRanges);
-  setPf({staff_id:first?.id||'',pay_month:month,basic_salary:first?.salary||'',bonus:String(bonus),deduction:'0',account_id:accounts[0]?.id||'',note:''});
-})();
+  const first=active[0];
+  (async () => {
+    // 1. It calculates the bonus based on the current month's revenue
+    const salesR = await sb.from('sales').select('amount').gte('entry_date', month+'-01').lte('entry_date', month+'-31');
+    const revenue = (salesR.data||[]).reduce((t,x) => t + +x.amount, 0);
+    const bonus = calcBonus(revenue, bonusRanges);
 
-        setErr('');setModal('payment');
-      }}>💳 Record payment</Btn>
+    // 2. It IMMEDIATELY updates the payment form state ('pf')
+    //    This sets the 'bonus' property to the calculated bonus amount.
+    setPf({
+       staff_id:first?.id||'',
+       pay_month:month,
+       basic_salary:first?.salary||'',
+       bonus:String(bonus), // <--- The calculated bonus goes here
+       deduction:'0',
+       account_id:accounts[0]?.id||'',
+       note:''
+    });
+  })();
+
+  // 3. It opens the payment modal
+  setErr('');setModal('payment');
+}}>💳 Record payment</Btn>
+  
     </div>
 
     <div className="card" style={{ marginBottom:16 }}>
@@ -305,6 +319,7 @@ export default function Payroll() {
 
     {modal==='payment' && <Modal title="Record salary payment" onClose={()=>setModal(null)}>
       <Field label="Staff member *">
+      <Field label="Bonus"><Inp type="number" step="0.01" value={pf.bonus} onChange={e=>setPf({...pf,bonus:e.target.value})}/></Field>
         <Sel value={pf.staff_id} onChange={async e=>{
           const nextId=e.target.value;
           const targetMonth = pf.pay_month;
