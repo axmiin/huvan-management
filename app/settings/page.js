@@ -127,14 +127,22 @@ function BonusTab() {
 }
 
 /* ── Tab 2: Users & Permissions ── */
-function UsersTab() {
+function UsersTab({ currentUserId }) {
   const [users, setUsers] = useState([]);
   const [err, setErr] = useState('');
   const [saved, setSaved] = useState('');
 
   const load = async () => {
     const r = await sb.from('profiles').select('id,email,role').order('email');
-    if (r.data) setUsers(r.data);
+    if (r.data) {
+      // Show pending approvals at the top
+      const sorted = [...r.data].sort((a, b) => {
+        if (a.role === 'pending' && b.role !== 'pending') return -1;
+        if (a.role !== 'pending' && b.role === 'pending') return 1;
+        return (a.email || '').localeCompare(b.email || '');
+      });
+      setUsers(sorted);
+    }
   };
   useEffect(() => { load(); }, []);
 
@@ -142,16 +150,29 @@ function UsersTab() {
     setUsers(prev => prev.map(u => u.id === id ? { ...u, role } : u));
 
   const saveUser = async (user) => {
+    setErr('');
     const r = await sb.from('profiles').update({ role: user.role }).eq('id', user.id);
     if (r.error) return setErr(r.error.message);
-    setSaved(user.id); setTimeout(() => setSaved(''), 2000); load();
+    setSaved(user.id);
+    setTimeout(() => setSaved(''), 2000);
+    load();
+  };
+
+  const removeUser = async (user) => {
+    if (user.id === currentUserId) return;
+    if (!confirm(`Remove ${user.email || 'this user'}? They will lose access immediately.`)) return;
+    setErr('');
+    // Deletes from auth.users (and cascades to profiles) via RPC
+    const r = await sb.rpc('delete_user_account', { target_user_id: user.id });
+    if (r.error) return setErr(r.error.message);
+    load();
   };
 
   return (
     <div className="card">
       <h2>Users & permissions</h2>
       <p style={{ fontSize:12,color:'var(--muted)',marginBottom:14 }}>
-        Manage roles for all registered accounts. Only owners can access this page.
+        Approve new staff signups or update roles. Only owners can access this page.
       </p>
       {err && <p className="err" style={{ marginBottom:8 }}>{err}</p>}
       <div style={{ display:'grid',gridTemplateColumns:'1fr auto auto',gap:10,marginBottom:8,alignItems:'center' }}>
@@ -162,22 +183,40 @@ function UsersTab() {
       {users.map(u => (
         <div key={u.id} style={{ display:'grid',gridTemplateColumns:'1fr auto auto',gap:10,
           padding:'10px 0',borderBottom:'1px solid var(--line)',alignItems:'center' }}>
-          <span style={{ fontSize:13,color:'var(--ink)',wordBreak:'break-all' }}>{u.email||'—'}</span>
-          <select value={u.role||'staff'} onChange={e=>changeRole(u.id,e.target.value)}
+          <div style={{ display:'flex',alignItems:'center',gap:8,flexWrap:'wrap' }}>
+            <span style={{ fontSize:13,color:'var(--ink)',wordBreak:'break-all' }}>{u.email||'—'}</span>
+            {u.role === 'pending' && (
+              <span style={{ fontSize:11,fontWeight:600,padding:'2px 7px',borderRadius:99,
+                background:'rgba(193,154,107,0.18)',color:'var(--accent)' }}>
+                Needs approval
+              </span>
+            )}
+          </div>
+          <select value={u.role||'pending'} onChange={e=>changeRole(u.id,e.target.value)}
             style={{ padding:'6px 10px',border:'1px solid var(--line)',borderRadius:8,
               background:'var(--bg)',color:'var(--ink)',font:'inherit',fontSize:13 }}>
+            <option value="pending">Pending</option>
             <option value="staff">Staff</option>
             <option value="owner">Owner</option>
           </select>
-          <Btn onClick={()=>saveUser(u)} style={{ padding:'6px 12px',fontSize:12,
-            background:saved===u.id?'#27ae60':undefined,color:saved===u.id?'#fff':undefined }}>
-            {saved===u.id?'Saved':'Save'}
-          </Btn>
+          <div style={{ display:'flex',gap:6 }}>
+            <Btn onClick={()=>saveUser(u)} style={{ padding:'6px 12px',fontSize:12,
+              background:saved===u.id?'#27ae60':undefined,color:saved===u.id?'#fff':undefined }}>
+              {saved===u.id?'Saved':'Save'}
+            </Btn>
+            {u.id !== currentUserId && (
+              <Btn alt onClick={()=>removeUser(u)} title="Remove user"
+                style={{ padding:'6px 9px',fontSize:12,color:'#c0392b' }}>
+                ✕
+              </Btn>
+            )}
+          </div>
         </div>
       ))}
     </div>
   );
 }
+
 
 /* ── Tab 3: Appearance ── */
 function AppearanceTab({ userId }) {
