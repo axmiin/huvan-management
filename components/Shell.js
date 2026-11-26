@@ -15,7 +15,7 @@ const Svg = ({ d }) => (
 
 const NAV = [
   ['/',          'Dashboard',      'M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z'],
-  ['/sales/',    'Sales & Income', 'M23 6l-9.5 9.5-5-5L1 18 M17 6h6v6'],
+  ['/sales/',    'Sales & Revenue', 'M23 6l-9.5 9.5-5-5L1 18 M17 6h6v6'],
   ['/expenses/', 'Expenses',       'M5 2h14v20l-3-2-2 2-2-2-2 2-2-2-3 2z M9 7h6 M9 11h6'],
   ['/cash/',     'Cash & Accounts','M3 7h18v12H3z M3 7l2-3h14l2 3 M16 13h2'],
   ['/payroll/',  'Payroll',        'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M23 21v-2a4 4 0 0 0-3-3.9 M16 3.1a4 4 0 0 1 0 7.8'],
