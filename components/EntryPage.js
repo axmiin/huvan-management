@@ -1,3 +1,5 @@
+//Entry Page
+
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import { sb } from '../lib/supabase';
@@ -17,6 +19,7 @@ const Modal = ({ title, onClose, children }) => (
 export default function EntryPage({ table, title, noun, cats: base, open, onClose, renderActions }) {
   const [rows, setRows] = useState([]), [accts, setAccts] = useState([]), [m, setM] = useState(today().slice(0, 7)), [err, setErr] = useState('');
   const [localOpen, setLocalOpen] = useState(false), [saving, setSaving] = useState(false);
+  const [acctFilter, setAcctFilter] = useState('all');
   const [form, setForm] = useState({ entry_date: today(), details: '', category: '', amount: '', account_id: '' });
   const isOpen = open !== undefined ? open : localOpen;
   const close = () => { setErr(''); onClose ? onClose() : setLocalOpen(false); };
@@ -42,24 +45,52 @@ export default function EntryPage({ table, title, noun, cats: base, open, onClos
   };
   const del = async (id) => { if (confirm('Delete this ' + noun + '?')) { await sb.from(table).delete().eq('id', id); load(); } };
   const cats = useMemo(() => [...new Set([...base, ...rows.map((x) => x.category).filter(Boolean)])], [rows, base]);
+
+  // account ids matching the selected filter type
+  const filteredAcctIds = useMemo(() => {
+    if (acctFilter === 'all') return null;
+    return new Set(accts.filter(a => (a.type || '').toLowerCase() === acctFilter).map(a => a.id));
+  }, [accts, acctFilter]);
+
   const { list, total, top } = useMemo(() => {
-    const list = rows.filter((x) => !m || x.entry_date.slice(0, 7) === m).map((x) => ({ ...x, a: +x.amount }));
+    let list = rows.filter((x) => !m || x.entry_date.slice(0, 7) === m).map((x) => ({ ...x, a: +x.amount }));
+    if (filteredAcctIds) list = list.filter(x => filteredAcctIds.has(x.account_id));
     const by = {}; let total = 0;
     list.forEach((x) => { total += x.a; const c = x.category || 'Uncategorised'; by[c] = (by[c] || 0) + x.a; });
     const best = Object.entries(by).sort((p, q) => q[1] - p[1])[0];
     return { list, total, top: best ? best[0] : '-' };
-  }, [rows, m]);
+  }, [rows, m, filteredAcctIds]);
+
   const csv = () => {
     const q = (v) => '"' + String(v).replace(/"/g, '""') + '"';
     const t = [['Date', 'Details', 'Category', 'Account', 'Amount'], ...list.map((x) => [dmy(x.entry_date), x.details, x.category || '', an(x.account_id), x.a.toFixed(2)])].map((r) => r.map(q).join(',')).join('\n');
     const l = document.createElement('a'); l.href = URL.createObjectURL(new Blob(['\ufeff' + t], { type: 'text/csv' }));
     l.download = 'huvan-' + table + '.csv'; l.click();
   };
+
+  const filterBtnStyle = (val) => ({
+    margin:0, padding:'6px 14px', borderRadius:20, border:'1px solid',
+    cursor:'pointer', font:'inherit', fontSize:12, fontWeight:600,
+    background: acctFilter === val ? 'var(--accent)' : 'transparent',
+    color: acctFilter === val ? 'var(--on)' : 'var(--muted)',
+    borderColor: acctFilter === val ? 'var(--accent)' : 'var(--line)',
+  });
+
   return (<><h1>{title}</h1>
     <div className="card"><h2>{title} list</h2>
-      <label>Month (clear to show all)</label><input type="month" value={m} onChange={(e) => setM(e.target.value)} style={{width:'100%',maxWidth:'100%',boxSizing:'border-box'}} />
+      <label>Month (clear to show all)</label>
+      <input type="month" value={m} onChange={(e) => setM(e.target.value)} style={{width:'100%',maxWidth:'100%',boxSizing:'border-box'}} />
       <div className="sum"><div>Total<b>{f(total)}</b></div><div>Entries<b>{list.length}</b></div><div>Biggest category<b>{top}</b></div></div>
-      <div style={{ display:'flex',gap:10,flexWrap:'wrap' }}>{renderActions && renderActions({ openModal: () => { setErr(''); setLocalOpen(true); } })}<button type="button" className="alt" onClick={csv}>Export CSV</button></div>
+      <div style={{ display:'flex',gap:8,flexWrap:'wrap',alignItems:'center',marginBottom:10 }}>
+        <span style={{ fontSize:12,fontWeight:500,color:'var(--muted)' }}>Account:</span>
+        <button type="button" style={filterBtnStyle('all')} onClick={()=>setAcctFilter('all')}>All</button>
+        <button type="button" style={filterBtnStyle('bank')} onClick={()=>setAcctFilter('bank')}>Bank</button>
+        <button type="button" style={filterBtnStyle('cash')} onClick={()=>setAcctFilter('cash')}>Cash</button>
+      </div>
+      <div style={{ display:'flex',gap:10,flexWrap:'wrap' }}>
+        {renderActions && renderActions({ openModal: () => { setErr(''); setLocalOpen(true); } })}
+        <button type="button" className="alt" onClick={csv}>Export CSV</button>
+      </div>
       {!isOpen && err && <p className="err">{err}</p>}
       <div className="xt"><table><thead><tr><th>Date</th><th>Details</th><th>Category</th><th>Account</th><th>Amount</th><th></th></tr></thead>
         <tbody>{list.length ? list.map((x) => (<tr key={x.id}><td>{dmy(x.entry_date)}</td><td>{x.details}</td><td>{x.category}</td><td>{an(x.account_id)}</td>
