@@ -25,12 +25,14 @@ const NAV = [
 const MENU_IC = 'M3 12h18 M3 6h18 M3 18h18';
 const CLOSE_IC = 'M18 6L6 18 M6 6l12 12';
 const OUT_IC   = 'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4 M16 17l5-5-5-5 M21 12H9';
+const MOON_IC  = 'M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z';
+const SUN_IC   = 'M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42M12 5a7 7 0 1 0 0 14A7 7 0 0 0 12 5z';
 
-const Brand = () => (
-  <div className="brand">
-    <span className="logo">H</span>
-    <span>Huvan Management</span>
-  </div>
+const Brand = ({ onClick }) => (
+  <Link href="/" className="brand" onClick={onClick} style={{ textDecoration:'none',color:'inherit' }}>
+    <img src="/Logo.png" alt="Huvan" style={{ height: 32, width: 32, maxWidth: 32, objectFit: 'cover', borderRadius: 8 }} />
+    <span>Huvan Pro</span>
+  </Link>
 );
 
 function Sidebar({ path, onNav }) {
