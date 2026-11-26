@@ -2,7 +2,7 @@
 import './globals.css';
 import Shell from '../components/Shell';
 export const metadata = {
-  title: 'Huvan Management',
+  title: 'Huvan Pro',
   icons: { icon: '/Logo.png', apple: '/Logo.png' },
 };
 export const viewport = { width: 'device-width', initialScale: 1 };
