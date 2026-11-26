@@ -356,6 +356,8 @@ export default function Settings() {
       {tab==='payroll' && <BonusTab/>}
       {tab==='users' && role==='owner' && <UsersTab/>}
       {tab==='appearance' && <AppearanceTab userId={userId}/>}
+      {tab==='users' && role==='owner' && <UsersTab currentUserId={userId}/>}
+
     </>
   );
 }
