@@ -1,3 +1,5 @@
+// Settings
+
 'use client';
 import { useEffect, useState } from 'react';
 import { sb } from '../../lib/supabase';
