@@ -33,7 +33,7 @@ const Brand = ({ onClick }) => (
   </Link>
 );
 
-function Sidebar({ path, onNav }) {
+function Sidebar({ path, onNav, onSignOut }) {
   return (
     <div className="sidebar-inner">
       <Brand/>
@@ -47,7 +47,7 @@ function Sidebar({ path, onNav }) {
         ))}
       </nav>
       <span className="sp"/>
-      <button className="nl signout" onClick={() => sb.auth.signOut()}>
+      <button type="button" className="nl signout" onClick={onSignOut}>
         <Svg d={OUT_IC}/>Sign out
       </button>
     </div>
@@ -63,8 +63,28 @@ export default function Shell({ children }) {
   const [err, setErr]               = useState('');
   const [msg, setMsg]               = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const path = usePathname();
+
+  const handleSignOut = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    setErr('');
+    setMsg('');
+    try {
+      await sb.auth.signOut({ scope: 'local' });
+    } catch {
+      try { await sb.auth.signOut(); } catch {}
+    } finally {
+      setSession(null);
+      setRole(null);
+      setEm('');
+      setPw('');
+      setIsSignUp(false);
+      setSigningOut(false);
+    }
+  };
 
   const hydrateUser = async (activeSession) => {
     setSession(activeSession);
@@ -73,31 +93,45 @@ export default function Shell({ children }) {
       return;
     }
 
+    setRole(undefined);
     const uid = activeSession.user.id;
     const email = activeSession.user.email;
 
-    // Ensure email is synced and read current role
-    await sb.from('profiles').update({ email }).eq('id', uid);
-    const { data: prof } = await sb.from('profiles').select('role').eq('id', uid).single();
-    setRole(prof?.role || 'pending');
-
-    const pref = await sb.from('user_preferences').select('theme,accent').eq('id', uid).single();
-    if (pref.data) {
-      const t = pref.data.theme || 'light';
-      const a = pref.data.accent || '#C19A6B';
-      if (t === 'system') {
-        document.documentElement.removeAttribute('data-theme');
-      } else {
-        document.documentElement.setAttribute('data-theme', t);
+    try {
+      if (email) {
+        await sb.from('profiles').update({ email }).eq('id', uid);
       }
-      document.documentElement.style.setProperty('--accent', a);
+      const { data: prof } = await sb.from('profiles').select('role').eq('id', uid).maybeSingle();
+      setRole(prof?.role || 'pending');
+
+      const { data: pref } = await sb.from('user_preferences').select('theme,accent').eq('id', uid).maybeSingle();
+      if (pref) {
+        const t = pref.theme || 'light';
+        const a = pref.accent || '#C19A6B';
+        if (t === 'system') {
+          document.documentElement.removeAttribute('data-theme');
+        } else {
+          document.documentElement.setAttribute('data-theme', t);
+        }
+        document.documentElement.style.setProperty('--accent', a);
+      }
+    } catch {
+      setRole('pending');
     }
   };
 
   useEffect(() => {
-    sb.auth.getSession().then(({ data }) => hydrateUser(data.session));
-    const { data } = sb.auth.onAuthStateChange((_, s) => hydrateUser(s));
-    return () => data.subscription.unsubscribe();
+    let active = true;
+    sb.auth.getSession().then(({ data }) => {
+      if (active) hydrateUser(data.session);
+    });
+    const { data } = sb.auth.onAuthStateChange((_event, s) => {
+      if (active) hydrateUser(s);
+    });
+    return () => {
+      active = false;
+      data.subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => { setDrawerOpen(false); }, [path]);
@@ -130,7 +164,11 @@ export default function Shell({ children }) {
         } else {
           const r = await sb.auth.signInWithPassword({ email, password: pw });
           setSubmitting(false);
-          setErr(r.error ? 'Sign-in failed. Check your email and password.' : '');
+          if (r.error) {
+            setErr('Sign-in failed. Check your email and password.');
+          } else if (r.data?.session) {
+            await hydrateUser(r.data.session);
+          }
         }
       }}>
         <Brand/>
@@ -163,8 +201,8 @@ export default function Shell({ children }) {
         <p style={{ fontSize:13,color:'var(--muted)',marginBottom:16 }}>
           Signed in as <strong>{session.user.email}</strong>. An owner needs to assign your role before you can view records.
         </p>
-        <button type="button" onClick={() => sb.auth.signOut()} style={{ width:'100%' }}>
-          Sign out
+        <button type="button" disabled={signingOut} onClick={handleSignOut} style={{ width:'100%' }}>
+          {signingOut ? 'Signing out…' : 'Sign out'}
         </button>
       </div>
     </div>
@@ -174,7 +212,7 @@ export default function Shell({ children }) {
     <div className="shell">
       {/* ── desktop sidebar ── */}
       <aside className="side">
-        <Sidebar path={path} onNav={() => {}}/>
+        <Sidebar path={path} onNav={() => {}} onSignOut={handleSignOut}/>
       </aside>
 
       {/* ── mobile drawer overlay ── */}
@@ -189,7 +227,7 @@ export default function Shell({ children }) {
             <Svg d={CLOSE_IC}/>
           </button>
         </div>
-        <Sidebar path={path} onNav={() => setDrawerOpen(false)}/>
+        <Sidebar path={path} onNav={() => setDrawerOpen(false)} onSignOut={handleSignOut}/>
       </aside>
 
       {/* ── main content ── */}
@@ -202,7 +240,7 @@ export default function Shell({ children }) {
             <Svg d={MENU_IC}/>
           </button>
           <Brand/>
-          <button aria-label="Sign out" onClick={() => sb.auth.signOut()}
+          <button aria-label="Sign out" onClick={handleSignOut}
             style={{ margin:0,padding:6,background:'none',border:'none',
               color:'var(--muted)',cursor:'pointer' }}>
             <Svg d={OUT_IC}/>
