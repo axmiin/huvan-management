@@ -8,7 +8,8 @@ export default function Page() {
     <EntryPage
       table="expenses"
       title="Expenses"
-      noun="expenses"
+      noun="expense"
+      showBankBalance
       cats={['Ingredients', 'Wages', 'Rent', 'Utilities', 'Supplies', 'Transport']}
       open={open}
       onClose={() => setOpen(false)}
