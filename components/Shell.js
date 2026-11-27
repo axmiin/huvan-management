@@ -100,6 +100,7 @@ export default function Shell({ children }) {
     setErr('');
     setMsg('');
     try { await sb.auth.signOut({ scope:'local' }); } catch {}
+    applyTheme('light');
     setSession(null);
     setRole(null);
     setEm('');
@@ -111,6 +112,7 @@ export default function Shell({ children }) {
   const hydrateUser = async (activeSession) => {
     setSession(activeSession);
     if (!activeSession?.user) {
+      applyTheme('light');
       setRole(null);
       return;
     }
@@ -125,6 +127,8 @@ export default function Shell({ children }) {
       if (pref) {
         applyTheme(pref.theme || 'light');
         document.documentElement.style.setProperty('--accent', pref.accent || '#C19A6B');
+      } else {
+        applyTheme('light');
       }
     } catch {
       setRole('pending');
@@ -133,6 +137,7 @@ export default function Shell({ children }) {
 
   useEffect(() => {
     let active = true;
+    applyTheme('light');
     sb.auth.getSession().then(({ data }) => { if (active) hydrateUser(data.session); });
     const { data } = sb.auth.onAuthStateChange((_e, s) => { if (active) hydrateUser(s); });
     return () => { active = false; data.subscription.unsubscribe(); };
@@ -150,42 +155,44 @@ export default function Shell({ children }) {
   if (!session) {
     return (
       <div className="login">
-        <form className="card" onSubmit={async (e) => {
-          e.preventDefault();
-          setErr('');
-          setMsg('');
-          setSubmitting(true);
-          const email = em.trim();
-          if (isSignUp) {
-            const { data, error } = await sb.auth.signUp({ email, password:pw });
-            setSubmitting(false);
-            if (error) return setErr(error.message);
-            if (data.session) await hydrateUser(data.session);
-            else setMsg('Account created. Ask the owner to approve your role (or confirm your email if required).');
-          } else {
-            const r = await sb.auth.signInWithPassword({ email, password:pw });
-            setSubmitting(false);
-            if (r.error) setErr('Sign-in failed. Check your email and password.');
-            else if (r.data?.session) await hydrateUser(r.data.session);
-          }
-        }}>
-          <Brand/>
-          <p style={{ fontSize:12,color:'var(--muted)',marginTop:4,marginBottom:8 }}>
-            {isSignUp ? 'Create a staff account to request access.' : 'Sign in to your account.'}
-          </p>
-          <label>Email</label>
-          <input type="email" value={em} onChange={e => setEm(e.target.value)} required/>
-          <label>Password</label>
-          <input type="password" value={pw} onChange={e => setPw(e.target.value)} required/>
-          <button type="submit" disabled={submitting} style={{ width:'100%' }}>
-            {submitting ? (isSignUp ? 'Creating account…' : 'Signing in…') : (isSignUp ? 'Create account' : 'Sign in')}
-          </button>
-          {msg && <p style={{ fontSize:12,color:'#27ae60',marginTop:8 }}>{msg}</p>}
-          <p className="err">{err}</p>
+        <div className="card">
+          <form method="post" autoComplete="on" onSubmit={async (e) => {
+            e.preventDefault();
+            setErr('');
+            setMsg('');
+            setSubmitting(true);
+            const email = em.trim();
+            if (isSignUp) {
+              const { data, error } = await sb.auth.signUp({ email, password:pw });
+              setSubmitting(false);
+              if (error) return setErr(error.message);
+              if (data.session) await hydrateUser(data.session);
+              else setMsg('Account created. Ask the owner to approve your role (or confirm your email if required).');
+            } else {
+              const r = await sb.auth.signInWithPassword({ email, password:pw });
+              setSubmitting(false);
+              if (r.error) setErr('Sign-in failed. Check your email and password.');
+              else if (r.data?.session) await hydrateUser(r.data.session);
+            }
+          }}>
+            <Brand/>
+            <p style={{ fontSize:12,color:'var(--muted)',marginTop:4,marginBottom:8 }}>
+              {isSignUp ? 'Create a staff account to request access.' : 'Sign in to your account.'}
+            </p>
+            <label htmlFor="login-email">Email</label>
+            <input id="login-email" name="email" type="email" autoComplete="username" value={em} onChange={e => setEm(e.target.value)} required/>
+            <label htmlFor="login-password">Password</label>
+            <input id="login-password" name="password" type="password" autoComplete={isSignUp ? 'new-password' : 'current-password'} value={pw} onChange={e => setPw(e.target.value)} required/>
+            <button type="submit" disabled={submitting} style={{ width:'100%' }}>
+              {submitting ? (isSignUp ? 'Creating account…' : 'Signing in…') : (isSignUp ? 'Create account' : 'Sign in')}
+            </button>
+            {msg && <p style={{ fontSize:12,color:'#27ae60',marginTop:8 }}>{msg}</p>}
+            <p className="err">{err}</p>
+          </form>
           <button type="button" onClick={() => { setIsSignUp(v => !v); setErr(''); setMsg(''); }} style={{ width:'100%',marginTop:6,background:'transparent',color:'var(--muted)',border:'none',fontSize:12,cursor:'pointer' }}>
             {isSignUp ? 'Already have an account? Sign in' : 'New staff? Create an account'}
           </button>
-        </form>
+        </div>
       </div>
     );
   }
