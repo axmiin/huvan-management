@@ -5,8 +5,8 @@ import { f, dmy, today } from '../../lib/util';
 
 const OWNER = 'Ali Azeem, Manager';
 
-const LOGO = 'data:image/png;base64,YOUR_LOGO_BASE64_HERE';
-const STAMP = 'data:image/png;base64,YOUR_STAMP_BASE64_HERE';
+const LOGO = '/Logo.png';
+const STAMP = '/stamp.png';
 
 const Modal = ({ title, onClose, children }) => (
   <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:50,display:'flex',alignItems:'flex-end',justifyContent:'center' }}
