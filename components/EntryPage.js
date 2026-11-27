@@ -90,11 +90,12 @@ export default function EntryPage({ table, title, noun, cats: base, open, onClos
   });
 
   return (<><h1>{title}</h1>
-    <div className="card"><h2>{title} list</h2>
+    <div className="card" style={{ marginBottom:16 }}>
+      <h2>{title} overview</h2>
       <label>Month (clear to show all)</label>
       <input type="month" value={m} onChange={(e) => setM(e.target.value)} style={{width:'100%',maxWidth:'100%',boxSizing:'border-box'}} />
       <div className="sum"><div>Total<b>{f(total)}</b></div><div>Entries<b>{list.length}</b></div><div>Biggest category<b>{top}</b></div></div>
-      <div style={{ display:'flex',gap:8,flexWrap:'wrap',alignItems:'center',marginBottom:10 }}>
+      <div style={{ display:'flex',gap:8,flexWrap:'wrap',alignItems:'center',marginBottom:12 }}>
         <span style={{ fontSize:12,fontWeight:500,color:'var(--muted)' }}>Account:</span>
         <button type="button" style={filterBtnStyle('all')} onClick={()=>setAcctFilter('all')}>All</button>
         <button type="button" style={filterBtnStyle('bank')} onClick={()=>setAcctFilter('bank')}>Bank</button>
@@ -105,6 +106,9 @@ export default function EntryPage({ table, title, noun, cats: base, open, onClos
         <button type="button" className="alt" onClick={csv}>Export CSV</button>
       </div>
       {!isOpen && err && <p className="err">{err}</p>}
+    </div>
+    <div className="card">
+      <h2>{title} list</h2>
       <div className="xt"><table><thead><tr><th>Date</th><th>Details</th><th>Category</th><th>Account</th><th>Amount</th><th></th></tr></thead>
         <tbody>{list.length ? list.map((x) => (<tr key={x.id}><td>{dmy(x.entry_date)}</td><td>{x.details}</td><td>{x.category}</td><td>{an(x.account_id)}</td>
           <td className="n">{f(x.a)}</td><td><a onClick={() => del(x.id)}>×</a></td></tr>)) : <tr><td colSpan="6">No entries</td></tr>}</tbody></table></div>
