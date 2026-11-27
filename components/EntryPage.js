@@ -129,7 +129,7 @@ export default function EntryPage({ table, title, noun, cats: base, open, onClos
 
   const csv = () => {
     const q = (v) => '"' + String(v).replace(/"/g, '""') + '"';
-    const t = [['Date', 'Details', 'Category', 'Account', 'Amount'], ...list.map((x) => [dmy(x.entry_date), x.details, x.category || '', an(x.account_id), x.a.toFixed(2)])].map((r) => r.map(q).join(',')).join('\n');
+    const t = [['Date', 'Details', 'Category', 'Amount', 'Account'], ...list.map((x) => [dmy(x.entry_date), x.details, x.category || '', x.a.toFixed(2), an(x.account_id)])].map((r) => r.map(q).join(',')).join('\n');
     const l = document.createElement('a'); l.href = URL.createObjectURL(new Blob(['\ufeff' + t], { type: 'text/csv' }));
     l.download = 'huvan-' + table + '.csv'; l.click();
   };
@@ -168,9 +168,9 @@ export default function EntryPage({ table, title, noun, cats: base, open, onClos
     </div>
     <div className="card">
       <h2>{title} list</h2>
-      <div className="xt"><table><thead><tr><th>Date</th><th>Details</th><th>Category</th><th>Account</th><th>Amount</th><th></th></tr></thead>
-        <tbody>{list.length ? list.map((x) => (<tr key={x.id}><td>{dmy(x.entry_date)}</td><td>{x.details}</td><td>{x.category}</td><td>{an(x.account_id)}</td>
-          <td className="n">{f(x.a)}</td><td><a onClick={() => del(x.id)}>×</a></td></tr>)) : <tr><td colSpan="6">No entries</td></tr>}</tbody></table></div>
+      <div className="xt"><table><thead><tr><th>Date</th><th>Details</th><th>Category</th><th>Amount</th><th>Account</th><th></th></tr></thead>
+        <tbody>{list.length ? list.map((x) => (<tr key={x.id}><td>{dmy(x.entry_date)}</td><td>{x.details}</td><td>{x.category}</td>
+          <td className="n">{f(x.a)}</td><td>{an(x.account_id)}</td><td><a onClick={() => del(x.id)}>×</a></td></tr>)) : <tr><td colSpan="6">No entries</td></tr>}</tbody></table></div>
     </div>
     {isOpen && <Modal title={'Add ' + noun} onClose={close}><form onSubmit={add}>
       <label>Date</label><input type="date" value={form.entry_date} onChange={set('entry_date')} style={{width:'100%',maxWidth:'100%',boxSizing:'border-box'}} />
