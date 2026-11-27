@@ -25,6 +25,8 @@ const NAV = [
 const MENU_IC  = 'M3 12h18 M3 6h18 M3 18h18';
 const CLOSE_IC = 'M18 6L6 18 M6 6l12 12';
 const OUT_IC   = 'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4 M16 17l5-5-5-5 M21 12H9';
+const SUN_IC   = 'M12 1v2 M12 21v2 M4.22 4.22l1.42 1.42 M18.36 18.36l1.42 1.42 M1 12h2 M21 12h2 M4.22 19.78l1.42-1.42 M18.36 5.64l1.42-1.42 M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10z';
+const MOON_IC  = 'M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z';
 
 const Brand = ({ onClick }) => (
   <Link href="/" className="brand" onClick={onClick} style={{ textDecoration:'none',color:'inherit' }}>
@@ -33,7 +35,7 @@ const Brand = ({ onClick }) => (
   </Link>
 );
 
-function Sidebar({ path, onNav, onSignOut, email, role }) {
+function Sidebar({ path, onNav, onSignOut, email }) {
   return (
     <div className="sidebar-inner">
       <Brand/>
@@ -48,13 +50,13 @@ function Sidebar({ path, onNav, onSignOut, email, role }) {
       </nav>
       <span className="sp"/>
       {email && (
-        <div style={{ padding:'10px 12px',marginBottom:6,borderRadius:10,border:'1px solid var(--line)',background:'var(--bg)' }}>
-          <div style={{ fontSize:12,fontWeight:600,color:'var(--ink)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }} title={email}>
+        <div style={{ marginBottom:8 }}>
+          <div style={{ fontSize:11,color:'var(--muted)',marginBottom:4,paddingLeft:2 }}>
+            Signed in as
+          </div>
+          <div style={{ padding:'9px 12px',borderRadius:10,border:'1px solid var(--line)',background:'var(--bg)',fontSize:12,fontWeight:600,color:'var(--ink)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }} title={email}>
             {email}
           </div>
-          <span style={{ display:'inline-block',marginTop:4,fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:0.5,padding:'2px 7px',borderRadius:99,background:'rgba(193,154,107,0.18)',color:'var(--accent)' }}>
-            {role || 'staff'}
-          </span>
         </div>
       )}
       <button type="button" className="nl signout" onClick={onSignOut}>
@@ -67,6 +69,7 @@ function Sidebar({ path, onNav, onSignOut, email, role }) {
 export default function Shell({ children }) {
   const [session, setSession]       = useState(undefined);
   const [role, setRole]             = useState(undefined);
+  const [theme, setTheme]           = useState('light');
   const [isSignUp, setIsSignUp]     = useState(false);
   const [em, setEm]                 = useState('');
   const [pw, setPw]                 = useState('');
@@ -76,6 +79,29 @@ export default function Shell({ children }) {
   const [signingOut, setSigningOut] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const path = usePathname();
+
+  const applyTheme = (t) => {
+    if (t === 'system') {
+      document.documentElement.removeAttribute('data-theme');
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setTheme(prefersDark ? 'dark' : 'light');
+    } else {
+      document.documentElement.setAttribute('data-theme', t);
+      setTheme(t);
+    }
+  };
+
+  const toggleTheme = async () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    if (session?.user?.id) {
+      await sb.from('user_preferences').upsert({
+        id: session.user.id,
+        theme: next,
+        updated_at: new Date().toISOString(),
+      });
+    }
+  };
 
   const handleSignOut = async () => {
     if (signingOut) return;
@@ -118,11 +144,7 @@ export default function Shell({ children }) {
       if (pref) {
         const t = pref.theme || 'light';
         const a = pref.accent || '#C19A6B';
-        if (t === 'system') {
-          document.documentElement.removeAttribute('data-theme');
-        } else {
-          document.documentElement.setAttribute('data-theme', t);
-        }
+        applyTheme(t);
         document.documentElement.style.setProperty('--accent', a);
       }
     } catch {
@@ -203,68 +225,4 @@ export default function Shell({ children }) {
     </div>
   );
 
-  if (role === 'pending') return (
-    <div className="login">
-      <div className="card" style={{ textAlign:'center' }}>
-        <Brand/>
-        <h2 style={{ fontSize:16,marginTop:12,marginBottom:6 }}>Account pending approval</h2>
-        <p style={{ fontSize:13,color:'var(--muted)',marginBottom:16 }}>
-          Signed in as <strong>{session.user.email}</strong>. An owner needs to assign your role before you can view records.
-        </p>
-        <button type="button" disabled={signingOut} onClick={handleSignOut} style={{ width:'100%' }}>
-          {signingOut ? 'Signing out…' : 'Sign out'}
-        </button>
-      </div>
-    </div>
-  );
-
-  const userEmail = session.user.email || '';
-
-  return (
-    <div className="shell">
-      {/* ── desktop sidebar ── */}
-      <aside className="side">
-        <Sidebar path={path} onNav={() => {}} onSignOut={handleSignOut} email={userEmail} role={role}/>
-      </aside>
-
-      {/* ── mobile drawer overlay ── */}
-      {drawerOpen && (
-        <div className="drawer-overlay" onClick={() => setDrawerOpen(false)}/>
-      )}
-      <aside className={'drawer'+(drawerOpen?' drawer-open':'')}>
-        <div style={{ display:'flex',justifyContent:'flex-end',padding:'12px 12px 0' }}>
-          <button onClick={() => setDrawerOpen(false)}
-            style={{ margin:0,padding:6,background:'none',border:'none',
-              color:'var(--muted)',cursor:'pointer' }}>
-            <Svg d={CLOSE_IC}/>
-          </button>
-        </div>
-        <Sidebar path={path} onNav={() => setDrawerOpen(false)} onSignOut={handleSignOut} email={userEmail} role={role}/>
-      </aside>
-
-      {/* ── main content ── */}
-      <div className="main-wrap">
-        {/* mobile top bar */}
-        <header className="top">
-          <button aria-label="Open menu" onClick={() => setDrawerOpen(true)}
-            style={{ margin:0,padding:6,background:'none',border:'none',
-              color:'var(--ink)',cursor:'pointer' }}>
-            <Svg d={MENU_IC}/>
-          </button>
-          <Brand/>
-          <div style={{ display:'flex',alignItems:'center',gap:6 }}>
-            <span title={userEmail} style={{ fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:0.5,padding:'3px 7px',borderRadius:99,background:'rgba(193,154,107,0.18)',color:'var(--accent)' }}>
-              {role}
-            </span>
-            <button aria-label="Sign out" onClick={handleSignOut}
-              style={{ margin:0,padding:6,background:'none',border:'none',
-                color:'var(--muted)',cursor:'pointer' }}>
-              <Svg d={OUT_IC}/>
-            </button>
-          </div>
-        </header>
-        <main>{children}</main>
-      </div>
-    </div>
-  );
-}
+  if (
