@@ -7,7 +7,7 @@ export default function Page() {
   return (
     <EntryPage
       table="sales"
-      title="Sales & Income"
+      title="Sales & Revenue"
       noun="sale"
       cats={['Daily sales', 'Catering', 'Invoice payment', 'Other income']}
       open={open}
