@@ -13,7 +13,7 @@ export default function Page() {
       open={open}
       onClose={() => setOpen(false)}
       renderActions={() => (
-        <button type="button" onClick={() => setOpen(true)}>Add Revenue</button>
+        <button type="button" onClick={() => setOpen(true)}>Add Expense</button>
       )}
     />
   );
