@@ -43,8 +43,8 @@ export default function EntryPage({ table, title, noun, cats: base, open, onClos
       sb.from(table).select('*').order('entry_date', { ascending: false }).order('created_at', { ascending: false }),
     ];
     if (showBankBalance) {
-      queries.push(sb.from('sales').select('amount,account_id,entry_date'));
-      queries.push(sb.from('expenses').select('amount,account_id,entry_date'));
+      queries.push(sb.from('sales').select('amount,account_id'));
+      queries.push(sb.from('expenses').select('amount,account_id'));
     }
 
     const [a, r, s, ex] = await Promise.all(queries);
@@ -93,13 +93,12 @@ export default function EntryPage({ table, title, noun, cats: base, open, onClos
   const bankBalance = useMemo(() => {
     if (!showBankBalance) return 0;
 
-    const matchMonth = (x) => !m || String(x.entry_date || '').slice(0, 7) === m;
     const salesByAcct = {};
-    salesRows.filter(matchMonth).forEach((s) => {
+    salesRows.forEach((s) => {
       if (s.account_id) salesByAcct[s.account_id] = (salesByAcct[s.account_id] || 0) + (Number(s.amount) || 0);
     });
     const expByAcct = {};
-    expRows.filter(matchMonth).forEach((x) => {
+    expRows.forEach((x) => {
       if (x.account_id) expByAcct[x.account_id] = (expByAcct[x.account_id] || 0) + (Number(x.amount) || 0);
     });
 
@@ -108,13 +107,13 @@ export default function EntryPage({ table, title, noun, cats: base, open, onClos
       : accts;
 
     return targetAccts.reduce((sum, acct) => {
-      if (!m && acct.balance !== undefined && acct.balance !== null && !Number.isNaN(Number(acct.balance))) {
+      if (acct.balance !== undefined && acct.balance !== null && !Number.isNaN(Number(acct.balance))) {
         return sum + Number(acct.balance);
       }
-      const opening = m ? 0 : (Number(acct.opening_balance) || 0);
+      const opening = Number(acct.opening_balance) || 0;
       return sum + opening + (salesByAcct[acct.id] || 0) - (expByAcct[acct.id] || 0);
     }, 0);
-  }, [showBankBalance, filteredAcctIds, m, accts, salesRows, expRows]);
+  }, [showBankBalance, filteredAcctIds, accts, salesRows, expRows]);
 
   const { list, total, top } = useMemo(() => {
     let list = rows
