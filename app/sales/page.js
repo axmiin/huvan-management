@@ -9,6 +9,7 @@ export default function Page() {
       table="sales"
       title="Sales & Revenue"
       noun="sale"
+      showBankBalance
       cats={['Daily sales', 'Catering', 'Invoice payment', 'Other income']}
       open={open}
       onClose={() => setOpen(false)}
