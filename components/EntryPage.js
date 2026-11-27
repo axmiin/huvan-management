@@ -5,6 +5,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { sb } from '../lib/supabase';
 import { f, dmy, today } from '../lib/util';
 
+const compareLatest = (a, b) => {
+  const dateCmp = String(b.entry_date || '').localeCompare(String(a.entry_date || ''));
+  if (dateCmp !== 0) return dateCmp;
+  return String(b.created_at || '').localeCompare(String(a.created_at || ''));
+};
+
 const Modal = ({ title, onClose, children }) => (
   <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,0.45)',zIndex:50,display:'flex',alignItems:'flex-end',justifyContent:'center' }} onClick={(e)=>e.target===e.currentTarget&&onClose()}>
     <div style={{ background:'#f0ece8',borderRadius:'16px 16px 0 0',padding:20,width:'100%',maxWidth:440,paddingBottom:'calc(20px + env(safe-area-inset-bottom))',maxHeight:'90vh',overflowY:'auto' }}>
@@ -24,9 +30,13 @@ export default function EntryPage({ table, title, noun, cats: base, open, onClos
   const isOpen = open !== undefined ? open : localOpen;
   const close = () => { setErr(''); onClose ? onClose() : setLocalOpen(false); };
   const load = async () => {
-    const [a, r] = await Promise.all([sb.from('accounts').select('*').order('created_at'), sb.from(table).select('*').order('entry_date').order('created_at')]);
+    const [a, r] = await Promise.all([
+      sb.from('accounts').select('*').order('created_at'),
+      sb.from(table).select('*').order('entry_date', { ascending: false }).order('created_at', { ascending: false }),
+    ]);
     if (a.error || r.error) return setErr((a.error || r.error).message);
-    setAccts(a.data); setRows(r.data);
+    setAccts(a.data);
+    setRows([...(r.data || [])].sort(compareLatest));
     setForm((p) => ({ ...p, account_id: p.account_id || (a.data[0] ? a.data[0].id : '') }));
   };
   useEffect(() => { load(); }, []);
@@ -53,7 +63,10 @@ export default function EntryPage({ table, title, noun, cats: base, open, onClos
   }, [accts, acctFilter]);
 
   const { list, total, top } = useMemo(() => {
-    let list = rows.filter((x) => !m || x.entry_date.slice(0, 7) === m).map((x) => ({ ...x, a: +x.amount }));
+    let list = rows
+      .filter((x) => !m || x.entry_date.slice(0, 7) === m)
+      .map((x) => ({ ...x, a: +x.amount }))
+      .sort(compareLatest);
     if (filteredAcctIds) list = list.filter(x => filteredAcctIds.has(x.account_id));
     const by = {}; let total = 0;
     list.forEach((x) => { total += x.a; const c = x.category || 'Uncategorised'; by[c] = (by[c] || 0) + x.a; });
