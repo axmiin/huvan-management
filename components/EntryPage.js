@@ -5,9 +5,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { sb } from '../lib/supabase';
 import { f, dmy, today } from '../lib/util';
 
-const isCashAccount = (acct) =>
-  String(acct?.type || '').toLowerCase() === 'cash' || /\bcash\b/i.test(acct?.name || '');
-
 const compareLatest = (a, b) => {
   const dateCmp = String(b.entry_date || '').localeCompare(String(a.entry_date || ''));
   if (dateCmp !== 0) return dateCmp;
@@ -94,7 +91,7 @@ export default function EntryPage({ table, title, noun, cats: base, open, onClos
   }, [accts, acctFilter]);
 
   const bankBalance = useMemo(() => {
-    if (!showBankBalance || acctFilter === 'cash') return 0;
+    if (!showBankBalance) return 0;
 
     const matchMonth = (x) => !m || String(x.entry_date || '').slice(0, 7) === m;
     const salesByAcct = {};
@@ -106,11 +103,9 @@ export default function EntryPage({ table, title, noun, cats: base, open, onClos
       if (x.account_id) expByAcct[x.account_id] = (expByAcct[x.account_id] || 0) + (Number(x.amount) || 0);
     });
 
-    const targetAccts = accts.filter((acct) => {
-      if (isCashAccount(acct)) return false;
-      if (filteredAcctIds) return filteredAcctIds.has(acct.id);
-      return true;
-    });
+    const targetAccts = filteredAcctIds
+      ? accts.filter((acct) => filteredAcctIds.has(acct.id))
+      : accts;
 
     return targetAccts.reduce((sum, acct) => {
       if (!m && acct.balance !== undefined && acct.balance !== null && !Number.isNaN(Number(acct.balance))) {
@@ -119,7 +114,7 @@ export default function EntryPage({ table, title, noun, cats: base, open, onClos
       const opening = m ? 0 : (Number(acct.opening_balance) || 0);
       return sum + opening + (salesByAcct[acct.id] || 0) - (expByAcct[acct.id] || 0);
     }, 0);
-  }, [showBankBalance, acctFilter, filteredAcctIds, m, accts, salesRows, expRows]);
+  }, [showBankBalance, filteredAcctIds, m, accts, salesRows, expRows]);
 
   const { list, total, top } = useMemo(() => {
     let list = rows
