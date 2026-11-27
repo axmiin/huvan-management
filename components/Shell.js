@@ -33,7 +33,7 @@ const Brand = ({ onClick }) => (
   </Link>
 );
 
-function Sidebar({ path, onNav, onSignOut }) {
+function Sidebar({ path, onNav, onSignOut, email, role }) {
   return (
     <div className="sidebar-inner">
       <Brand/>
@@ -47,6 +47,16 @@ function Sidebar({ path, onNav, onSignOut }) {
         ))}
       </nav>
       <span className="sp"/>
+      {email && (
+        <div style={{ padding:'10px 12px',marginBottom:6,borderRadius:10,border:'1px solid var(--line)',background:'var(--bg)' }}>
+          <div style={{ fontSize:12,fontWeight:600,color:'var(--ink)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }} title={email}>
+            {email}
+          </div>
+          <span style={{ display:'inline-block',marginTop:4,fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:0.5,padding:'2px 7px',borderRadius:99,background:'rgba(193,154,107,0.18)',color:'var(--accent)' }}>
+            {role || 'staff'}
+          </span>
+        </div>
+      )}
       <button type="button" className="nl signout" onClick={onSignOut}>
         <Svg d={OUT_IC}/>Sign out
       </button>
@@ -208,11 +218,13 @@ export default function Shell({ children }) {
     </div>
   );
 
+  const userEmail = session.user.email || '';
+
   return (
     <div className="shell">
       {/* ── desktop sidebar ── */}
       <aside className="side">
-        <Sidebar path={path} onNav={() => {}} onSignOut={handleSignOut}/>
+        <Sidebar path={path} onNav={() => {}} onSignOut={handleSignOut} email={userEmail} role={role}/>
       </aside>
 
       {/* ── mobile drawer overlay ── */}
@@ -227,7 +239,7 @@ export default function Shell({ children }) {
             <Svg d={CLOSE_IC}/>
           </button>
         </div>
-        <Sidebar path={path} onNav={() => setDrawerOpen(false)} onSignOut={handleSignOut}/>
+        <Sidebar path={path} onNav={() => setDrawerOpen(false)} onSignOut={handleSignOut} email={userEmail} role={role}/>
       </aside>
 
       {/* ── main content ── */}
@@ -240,11 +252,16 @@ export default function Shell({ children }) {
             <Svg d={MENU_IC}/>
           </button>
           <Brand/>
-          <button aria-label="Sign out" onClick={handleSignOut}
-            style={{ margin:0,padding:6,background:'none',border:'none',
-              color:'var(--muted)',cursor:'pointer' }}>
-            <Svg d={OUT_IC}/>
-          </button>
+          <div style={{ display:'flex',alignItems:'center',gap:6 }}>
+            <span title={userEmail} style={{ fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:0.5,padding:'3px 7px',borderRadius:99,background:'rgba(193,154,107,0.18)',color:'var(--accent)' }}>
+              {role}
+            </span>
+            <button aria-label="Sign out" onClick={handleSignOut}
+              style={{ margin:0,padding:6,background:'none',border:'none',
+                color:'var(--muted)',cursor:'pointer' }}>
+              <Svg d={OUT_IC}/>
+            </button>
+          </div>
         </header>
         <main>{children}</main>
       </div>
