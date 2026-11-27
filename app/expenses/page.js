@@ -8,6 +8,15 @@ const TITLE = 'Expenses';
 const NOUN = 'expense';
 const BASE_CATS = ['Ingredients', 'Wages', 'Rent', 'Utilities', 'Supplies', 'Transport'];
 
+const isCashAccount = (acct) =>
+  String(acct?.type || '').toLowerCase() === 'cash' || /\bcash\b/i.test(acct?.name || '');
+
+const compareLatest = (a, b) => {
+  const dateCmp = String(b.entry_date || '').localeCompare(String(a.entry_date || ''));
+  if (dateCmp !== 0) return dateCmp;
+  return String(b.created_at || '').localeCompare(String(a.created_at || ''));
+};
+
 const Modal = ({ title, onClose, children }) => (
   <div
     style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 50, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
@@ -40,19 +49,25 @@ const Modal = ({ title, onClose, children }) => (
 );
 
 export default function Page() {
-  const [rows, setRows] = useState([]), [accts, setAccts] = useState([]), [m, setM] = useState(today().slice(0, 7)), [err, setErr] = useState('');
+  const [rows, setRows] = useState([]);
+  const [accts, setAccts] = useState([]);
+  const [salesRows, setSalesRows] = useState([]);
+  const [m, setM] = useState(today().slice(0, 7));
+  const [err, setErr] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState({ entry_date: today(), details: '', category: '', amount: '', account_id: '' });
 
   const load = async () => {
-    const [a, r] = await Promise.all([
+    const [a, r, s] = await Promise.all([
       sb.from('accounts').select('*').order('created_at'),
-      sb.from(TABLE).select('*').order('entry_date').order('created_at'),
+      sb.from(TABLE).select('*').order('entry_date', { ascending: false }).order('created_at', { ascending: false }),
+      sb.from('sales').select('amount,account_id'),
     ]);
     if (a.error || r.error) return setErr((a.error || r.error).message);
-    setAccts(a.data);
-    setRows(r.data);
-    setForm((p) => ({ ...p, account_id: p.account_id || (a.data[0] ? a.data[0].id : '') }));
+    setAccts(a.data || []);
+    setRows([...(r.data || [])].sort(compareLatest));
+    if (!s.error && s.data) setSalesRows(s.data);
+    setForm((p) => ({ ...p, account_id: p.account_id || (a.data?.[0] ? a.data[0].id : '') }));
   };
 
   useEffect(() => { load(); }, []);
@@ -86,17 +101,34 @@ export default function Page() {
 
   const cats = useMemo(() => [...new Set([...BASE_CATS, ...rows.map((x) => x.category).filter(Boolean)])], [rows]);
 
-  const { list, total, top } = useMemo(() => {
-    const list = rows.filter((x) => !m || x.entry_date.slice(0, 7) === m).map((x) => ({ ...x, a: +x.amount }));
-    const by = {};
-    let total = 0;
-    list.forEach((x) => {
-      total += x.a;
-      const c = x.category || 'Uncategorised';
-      by[c] = (by[c] || 0) + x.a;
+  const bankBalance = useMemo(() => {
+    const salesByAcct = {};
+    salesRows.forEach((s) => {
+      if (s.account_id) salesByAcct[s.account_id] = (salesByAcct[s.account_id] || 0) + (Number(s.amount) || 0);
     });
-    const best = Object.entries(by).sort((p, q) => q[1] - p[1])[0];
-    return { list, total, top: best ? best[0] : '-' };
+    const expByAcct = {};
+    rows.forEach((x) => {
+      if (x.account_id) expByAcct[x.account_id] = (expByAcct[x.account_id] || 0) + (Number(x.amount) || 0);
+    });
+
+    return accts
+      .filter((acct) => !isCashAccount(acct))
+      .reduce((sum, acct) => {
+        if (acct.balance !== undefined && acct.balance !== null && !Number.isNaN(Number(acct.balance))) {
+          return sum + Number(acct.balance);
+        }
+        const opening = Number(acct.opening_balance) || 0;
+        return sum + opening + (salesByAcct[acct.id] || 0) - (expByAcct[acct.id] || 0);
+      }, 0);
+  }, [accts, rows, salesRows]);
+
+  const { list, total } = useMemo(() => {
+    const filtered = rows
+      .filter((x) => !m || x.entry_date.slice(0, 7) === m)
+      .map((x) => ({ ...x, a: +x.amount }))
+      .sort(compareLatest);
+    const sumTotal = filtered.reduce((acc, x) => acc + x.a, 0);
+    return { list: filtered, total: sumTotal };
   }, [rows, m]);
 
   const csv = () => {
@@ -125,7 +157,7 @@ export default function Page() {
         <div className="sum">
           <div>Total<b>{f(total)}</b></div>
           <div>Entries<b>{list.length}</b></div>
-          <div>Biggest category<b>{top}</b></div>
+          <div>Bank balance<b>{f(bankBalance)}</b></div>
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <button
