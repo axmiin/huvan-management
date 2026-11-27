@@ -225,4 +225,66 @@ export default function Shell({ children }) {
     </div>
   );
 
-  if (
+  if (role === 'pending') return (
+    <div className="login">
+      <div className="card" style={{ textAlign:'center' }}>
+        <Brand/>
+        <h2 style={{ fontSize:16,marginTop:12,marginBottom:6 }}>Account pending approval</h2>
+        <p style={{ fontSize:13,color:'var(--muted)',marginBottom:16 }}>
+          Signed in as <strong>{session.user.email}</strong>. An owner needs to assign your role before you can view records.
+        </p>
+        <button type="button" disabled={signingOut} onClick={handleSignOut} style={{ width:'100%' }}>
+          {signingOut ? 'Signing out…' : 'Sign out'}
+        </button>
+      </div>
+    </div>
+  );
+
+  const userEmail = session.user.email || '';
+
+  return (
+    <div className="shell">
+      {/* ── desktop sidebar ── */}
+      <aside className="side">
+        <Sidebar path={path} onNav={() => {}} onSignOut={handleSignOut} email={userEmail}/>
+      </aside>
+
+      {/* ── mobile drawer overlay ── */}
+      {drawerOpen && (
+        <div className="drawer-overlay" onClick={() => setDrawerOpen(false)}/>
+      )}
+      <aside className={'drawer'+(drawerOpen?' drawer-open':'')}>
+        <div style={{ display:'flex',justifyContent:'flex-end',padding:'12px 12px 0' }}>
+          <button onClick={() => setDrawerOpen(false)}
+            style={{ margin:0,padding:6,background:'none',border:'none',
+              color:'var(--muted)',cursor:'pointer' }}>
+            <Svg d={CLOSE_IC}/>
+          </button>
+        </div>
+        <Sidebar path={path} onNav={() => setDrawerOpen(false)} onSignOut={handleSignOut} email={userEmail}/>
+      </aside>
+
+      {/* ── main content ── */}
+      <div className="main-wrap">
+        {/* mobile top bar */}
+        <header className="top">
+          <button aria-label="Open menu" onClick={() => setDrawerOpen(true)}
+            style={{ margin:0,padding:6,background:'none',border:'none',
+              color:'var(--ink)',cursor:'pointer' }}>
+            <Svg d={MENU_IC}/>
+          </button>
+          <Brand/>
+          <button
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            onClick={toggleTheme}
+            style={{ margin:0,padding:6,background:'none',border:'none',
+              color:'var(--ink)',cursor:'pointer' }}>
+            <Svg d={theme === 'dark' ? SUN_IC : MOON_IC}/>
+          </button>
+        </header>
+        <main>{children}</main>
+      </div>
+    </div>
+  );
+}
