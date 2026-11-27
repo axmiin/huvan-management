@@ -5,6 +5,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { sb } from '../lib/supabase';
 import { f, dmy, today } from '../lib/util';
 
+const isCashAccount = (acct) =>
+  String(acct?.type || '').toLowerCase() === 'cash' || /\bcash\b/i.test(acct?.name || '');
+
 const compareLatest = (a, b) => {
   const dateCmp = String(b.entry_date || '').localeCompare(String(a.entry_date || ''));
   if (dateCmp !== 0) return dateCmp;
@@ -22,26 +25,48 @@ const Modal = ({ title, onClose, children }) => (
   </div>
 );
 
-export default function EntryPage({ table, title, noun, cats: base, open, onClose, renderActions }) {
-  const [rows, setRows] = useState([]), [accts, setAccts] = useState([]), [m, setM] = useState(today().slice(0, 7)), [err, setErr] = useState('');
-  const [localOpen, setLocalOpen] = useState(false), [saving, setSaving] = useState(false);
+export default function EntryPage({ table, title, noun, cats: base, open, onClose, renderActions, showBankBalance = false }) {
+  const [rows, setRows] = useState([]);
+  const [accts, setAccts] = useState([]);
+  const [salesRows, setSalesRows] = useState([]);
+  const [expRows, setExpRows] = useState([]);
+  const [m, setM] = useState(today().slice(0, 7));
+  const [err, setErr] = useState('');
+  const [localOpen, setLocalOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [acctFilter, setAcctFilter] = useState('all');
   const [form, setForm] = useState({ entry_date: today(), details: '', category: '', amount: '', account_id: '' });
+
   const isOpen = open !== undefined ? open : localOpen;
   const close = () => { setErr(''); onClose ? onClose() : setLocalOpen(false); };
+
   const load = async () => {
-    const [a, r] = await Promise.all([
+    const queries = [
       sb.from('accounts').select('*').order('created_at'),
       sb.from(table).select('*').order('entry_date', { ascending: false }).order('created_at', { ascending: false }),
-    ]);
+    ];
+    if (showBankBalance) {
+      queries.push(sb.from('sales').select('amount,account_id'));
+      queries.push(sb.from('expenses').select('amount,account_id'));
+    }
+
+    const [a, r, s, ex] = await Promise.all(queries);
     if (a.error || r.error) return setErr((a.error || r.error).message);
-    setAccts(a.data);
+
+    setAccts(a.data || []);
     setRows([...(r.data || [])].sort(compareLatest));
-    setForm((p) => ({ ...p, account_id: p.account_id || (a.data[0] ? a.data[0].id : '') }));
+    if (showBankBalance) {
+      if (s && !s.error) setSalesRows(s.data || []);
+      if (ex && !ex.error) setExpRows(ex.data || []);
+    }
+    setForm((p) => ({ ...p, account_id: p.account_id || (a.data?.[0] ? a.data[0].id : '') }));
   };
-  useEffect(() => { load(); }, []);
+
+  useEffect(() => { load(); }, [table, showBankBalance]);
+
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
   const an = (id) => (accts.find((x) => x.id === id) || {}).name || '';
+
   const add = async (e) => {
     if (e) e.preventDefault();
     if (saving) return;
@@ -53,14 +78,42 @@ export default function EntryPage({ table, title, noun, cats: base, open, onClos
     if (r.error) return setErr(r.error.message);
     setErr(''); setForm((p) => ({ ...p, details: '', amount: '' })); close(); load();
   };
-  const del = async (id) => { if (confirm('Delete this ' + noun + '?')) { await sb.from(table).delete().eq('id', id); load(); } };
+
+  const del = async (id) => {
+    if (confirm('Delete this ' + noun + '?')) {
+      await sb.from(table).delete().eq('id', id);
+      load();
+    }
+  };
+
   const cats = useMemo(() => [...new Set([...base, ...rows.map((x) => x.category).filter(Boolean)])], [rows, base]);
 
-  // account ids matching the selected filter type
   const filteredAcctIds = useMemo(() => {
     if (acctFilter === 'all') return null;
     return new Set(accts.filter(a => (a.type || '').toLowerCase() === acctFilter).map(a => a.id));
   }, [accts, acctFilter]);
+
+  const bankBalance = useMemo(() => {
+    if (!showBankBalance) return 0;
+    const salesByAcct = {};
+    salesRows.forEach((s) => {
+      if (s.account_id) salesByAcct[s.account_id] = (salesByAcct[s.account_id] || 0) + (Number(s.amount) || 0);
+    });
+    const expByAcct = {};
+    expRows.forEach((x) => {
+      if (x.account_id) expByAcct[x.account_id] = (expByAcct[x.account_id] || 0) + (Number(x.amount) || 0);
+    });
+
+    return accts
+      .filter((acct) => !isCashAccount(acct))
+      .reduce((sum, acct) => {
+        if (acct.balance !== undefined && acct.balance !== null && !Number.isNaN(Number(acct.balance))) {
+          return sum + Number(acct.balance);
+        }
+        const opening = Number(acct.opening_balance) || 0;
+        return sum + opening + (salesByAcct[acct.id] || 0) - (expByAcct[acct.id] || 0);
+      }, 0);
+  }, [showBankBalance, accts, salesRows, expRows]);
 
   const { list, total, top } = useMemo(() => {
     let list = rows
@@ -94,7 +147,13 @@ export default function EntryPage({ table, title, noun, cats: base, open, onClos
       <h2>{title} overview</h2>
       <label>Month (clear to show all)</label>
       <input type="month" value={m} onChange={(e) => setM(e.target.value)} style={{width:'100%',maxWidth:'100%',boxSizing:'border-box'}} />
-      <div className="sum"><div>Total<b>{f(total)}</b></div><div>Entries<b>{list.length}</b></div><div>Biggest category<b>{top}</b></div></div>
+      <div className="sum">
+        <div>Total<b>{f(total)}</b></div>
+        <div>Entries<b>{list.length}</b></div>
+        {showBankBalance
+          ? <div>Bank balance<b>{f(bankBalance)}</b></div>
+          : <div>Biggest category<b>{top}</b></div>}
+      </div>
       <div style={{ display:'flex',gap:8,flexWrap:'wrap',alignItems:'center',marginBottom:12 }}>
         <span style={{ fontSize:12,fontWeight:500,color:'var(--muted)' }}>Account:</span>
         <button type="button" style={filterBtnStyle('all')} onClick={()=>setAcctFilter('all')}>All</button>
