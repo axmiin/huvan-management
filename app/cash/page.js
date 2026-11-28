@@ -237,4 +237,154 @@ export default function Cash() {
             <table style={{ width:'100%',borderCollapse:'collapse',fontSize:12,minWidth:420 }}>
               <thead>
                 <tr>
-                  {['Date','Details','Amount','Balance'].map(
+                  {['Date','Details','Amount','Balance'].map(h => (
+                    <th key={h} style={{ padding:'6px 6px',borderBottom:'1px solid var(--line)',
+                      fontSize:11,textTransform:'uppercase',letterSpacing:'.04em',
+                      color:'var(--muted)',fontWeight:600,textAlign:'left' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {stmt.map((x, i) => (
+                  <tr key={i}>
+                    <td style={{ padding:'7px 6px',borderBottom:'1px solid var(--line)',whiteSpace:'nowrap' }}>
+                      {x.d ? dmy2(x.d) : ''}
+                    </td>
+                    <td style={{ padding:'7px 6px',borderBottom:'1px solid var(--line)',
+                      maxWidth:160,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>
+                      {x.n}
+                    </td>
+                    <td style={{ padding:'7px 6px',borderBottom:'1px solid var(--line)',
+                      textAlign:'right',whiteSpace:'nowrap',
+                      color: x.v==null?'':x.v<0?'#c0392b':'#27ae60' }}>
+                      {x.v!=null ? f(x.v) : ''}
+                    </td>
+                    <td style={{ padding:'7px 6px',borderBottom:'1px solid var(--line)',
+                      textAlign:'right',whiteSpace:'nowrap',fontWeight:500 }}>
+                      {f(x.r)}
+                    </td>
+                  </tr>
+                ))}
+                {stmt.length===0 && (
+                  <tr><td colSpan="4" style={{ padding:'12px 6px',color:'var(--muted)' }}>No entries yet.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* transfer history */}
+        <div className="card">
+          <h2>Transfer history</h2>
+          <div style={{ overflowX:'auto' }}>
+            <table style={{ width:'100%',borderCollapse:'collapse',fontSize:12,minWidth:380 }}>
+              <thead>
+                <tr>
+                  {['Date','From','To','Note','Amount',''].map(h => (
+                    <th key={h} style={{ padding:'6px 6px',borderBottom:'1px solid var(--line)',
+                      fontSize:11,textTransform:'uppercase',letterSpacing:'.04em',
+                      color:'var(--muted)',fontWeight:600,textAlign:'left' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {hist.length ? hist.map(x => (
+                  <tr key={x.id}>
+                    <td style={{ padding:'7px 6px',borderBottom:'1px solid var(--line)',whiteSpace:'nowrap' }}>{dmy2(x.entry_date)}</td>
+                    <td style={{ padding:'7px 6px',borderBottom:'1px solid var(--line)',whiteSpace:'nowrap' }}>{name(x.from_account)}</td>
+                    <td style={{ padding:'7px 6px',borderBottom:'1px solid var(--line)',whiteSpace:'nowrap' }}>{name(x.to_account)}</td>
+                    <td style={{ padding:'7px 6px',borderBottom:'1px solid var(--line)',
+                      maxWidth:120,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{x.note}</td>
+                    <td style={{ padding:'7px 6px',borderBottom:'1px solid var(--line)',
+                      textAlign:'right',whiteSpace:'nowrap',fontWeight:500 }}>{f(x.amount)}</td>
+                    <td style={{ padding:'7px 6px',borderBottom:'1px solid var(--line)' }}>
+                      <a onClick={() => delT(x.id)} style={{ cursor:'pointer',color:'var(--muted)' }}>×</a>
+                    </td>
+                  </tr>
+                )) : (
+                  <tr><td colSpan="6" style={{ padding:'12px 6px',color:'var(--muted)' }}>No transfers yet.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Transfer modal ── */}
+      {modal==='transfer' && (
+        <Modal title="Transfer between accounts" onClose={() => setModal(null)}>
+          <Grid2>
+            <Field label="From">
+              <Sel value={tf.from_account} onChange={e => setTf({...tf, from_account:e.target.value})}>
+                {A.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+              </Sel>
+            </Field>
+            <Field label="To">
+              <Sel value={tf.to_account} onChange={e => setTf({...tf, to_account:e.target.value})}>
+                {A.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+              </Sel>
+            </Field>
+          </Grid2>
+          <Field label="Date">
+            <Inp type="date" value={tf.entry_date} onChange={e => setTf({...tf, entry_date:e.target.value})}/>
+          </Field>
+          <Field label="Amount">
+            <Inp type="number" step="0.01" min="0" value={tf.amount}
+              onChange={e => setTf({...tf, amount:e.target.value})}/>
+          </Field>
+          <Field label="Note (optional)">
+            <Inp value={tf.note} onChange={e => setTf({...tf, note:e.target.value})}/>
+          </Field>
+          {err && <p className="err">{err}</p>}
+          <Grid2 style={{ marginTop:14 }}>
+            <Btn alt onClick={() => setModal(null)} style={{ width:'100%' }}>Cancel</Btn>
+            <Btn onClick={addT} style={{ width:'100%' }}>Transfer</Btn>
+          </Grid2>
+        </Modal>
+      )}
+
+      {/* ── Add account modal ── */}
+      {modal==='addaccount' && (
+        <Modal title="Add account" onClose={() => setModal(null)}>
+          <Field label="Name">
+            <Inp value={af.name} onChange={e => setAf({...af, name:e.target.value})}/>
+          </Field>
+          <Field label="Type">
+            <Sel value={af.type} onChange={e => setAf({...af, type:e.target.value})}>
+              <option value="bank">Bank</option>
+              <option value="cash">Cash</option>
+            </Sel>
+          </Field>
+          <Field label="Opening balance">
+            <Inp type="number" step="0.01" value={af.opening_balance}
+              onChange={e => setAf({...af, opening_balance:e.target.value})}/>
+          </Field>
+          {err && <p className="err">{err}</p>}
+          <Grid2 style={{ marginTop:14 }}>
+            <Btn alt onClick={() => setModal(null)} style={{ width:'100%' }}>Cancel</Btn>
+            <Btn onClick={addA} style={{ width:'100%' }}>Add account</Btn>
+          </Grid2>
+        </Modal>
+      )}
+
+      {/* ── Edit account modal ── */}
+      {modal==='edit' && editing && (
+        <Modal title="Edit account" onClose={() => { setModal(null); setEditing(null); }}>
+          <Field label="Name">
+            <Inp value={editing.name}
+              onChange={e => setEditing({...editing, name:e.target.value})}/>
+          </Field>
+          <Field label="Opening balance">
+            <Inp type="number" step="0.01" value={editing.opening_balance}
+              onChange={e => setEditing({...editing, opening_balance:e.target.value})}/>
+          </Field>
+          {err && <p className="err">{err}</p>}
+          <Grid2 style={{ marginTop:14 }}>
+            <Btn alt onClick={() => { setModal(null); setEditing(null); }} style={{ width:'100%' }}>Cancel</Btn>
+            <Btn onClick={saveEdit} style={{ width:'100%' }}>Save</Btn>
+          </Grid2>
+        </Modal>
+      )}
+    </>
+  );
+}
