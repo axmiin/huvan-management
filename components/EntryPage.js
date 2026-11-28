@@ -142,6 +142,8 @@ export default function EntryPage({ table, title, noun, cats: base, open, onClos
     borderColor: acctFilter === val ? 'var(--accent)' : 'var(--line)',
   });
 
+  const isExpenses = table === 'expenses';
+
   return (<><h1>{title}</h1>
     <div className="card" style={{ marginBottom:16 }}>
       <h2>{title} overview</h2>
@@ -168,9 +170,11 @@ export default function EntryPage({ table, title, noun, cats: base, open, onClos
     </div>
     <div className="card">
       <h2>{title} list</h2>
-      <div className="xt"><table><thead><tr><th>Date</th><th>Details</th><th>Amount</th><th>Category</th><th>Account</th><th></th></tr></thead>
+      <div className="xt" style={isExpenses ? { maxWidth: 380, width: '100%' } : undefined}>
+        <table style={isExpenses ? { maxWidth: 380 } : undefined}><thead><tr><th>Date</th><th>Details</th><th>Amount</th><th>Category</th><th>Account</th><th></th></tr></thead>
         <tbody>{list.length ? list.map((x) => (<tr key={x.id}><td>{dmy(x.entry_date)}</td><td>{x.details}</td><td className="n">{f(x.a)}</td>
-          <td>{x.category}</td><td>{an(x.account_id)}</td><td><a onClick={() => del(x.id)}>×</a></td></tr>)) : <tr><td colSpan="6">No entries</td></tr>}</tbody></table></div>
+          <td>{x.category}</td><td>{an(x.account_id)}</td><td><a onClick={() => del(x.id)}>×</a></td></tr>)) : <tr><td colSpan="6">No entries</td></tr>}</tbody></table>
+      </div>
     </div>
     {isOpen && <Modal title={'Add ' + noun} onClose={close}><form onSubmit={add}>
       <label>Date</label><input type="date" value={form.entry_date} onChange={set('entry_date')} style={{width:'100%',maxWidth:'100%',boxSizing:'border-box'}} />
