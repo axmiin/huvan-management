@@ -234,7 +234,7 @@ export default function Cash() {
             Export CSV
           </Btn>
           <div style={{ overflowX:'auto', marginTop:8 }}>
-            <table style={{ width:'100%',borderCollapse:'collapse',fontSize:12,minWidth:390 }}>
+            <table style={{ width:'100%',borderCollapse:'collapse',fontSize:12,minWidth:380 }}>
               <thead>
                 <tr>
                   {['Date','Details','Amount','Balance'].map(h => (
