@@ -251,7 +251,7 @@ export default function Cash() {
                       {x.d ? dmy2(x.d) : ''}
                     </td>
                     <td style={{ padding:'7px 6px',borderBottom:'1px solid var(--line)',
-                      maxWidth:160,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>
+                      maxWidth:120,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>
                       {x.n}
                     </td>
                     <td style={{ padding:'7px 6px',borderBottom:'1px solid var(--line)',
