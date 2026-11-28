@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { sb } from '../../lib/supabase';
-import { f, dmy, today } from '../../lib/util';
+import { f, today } from '../../lib/util';
 
 const LOGO = '/logo.png';
 const STAMP = '/stamp.png';
@@ -24,6 +24,9 @@ const nextNo = (saved, type) => {
   return prefix + y + '/' + String(max + 1).padStart(3, '0');
 };
 
+const docTotal = (s) => ((s?.data || s)?.items || []).reduce((t, it) => t + num(it.q) * num(it.r), 0);
+const docStatus = (s) => ((s?.data || s)?.status === 'paid' ? 'paid' : 'open');
+
 // ── small UI pieces ───────────────────────────────────────
 const Inp = ({ style: s, ...p }) => (
   <input
@@ -37,7 +40,6 @@ const Inp = ({ style: s, ...p }) => (
       font: 'inherit',
       fontSize: 13,
       boxSizing: 'border-box',
-      transition: 'border-color .15s, box-shadow .15s',
       ...s,
     }}
     {...p}
@@ -62,7 +64,6 @@ const Btn = ({ alt, danger, style: s, ...p }) => (
       alignItems: 'center',
       justifyContent: 'center',
       gap: 6,
-      transition: 'opacity .15s, transform .1s',
       ...s,
     }}
     {...p}
@@ -355,6 +356,7 @@ export default function Invoices() {
   const blankDoc = (type, saved) => ({
     id: null,
     type,
+    status: 'open',
     no: nextNo(saved, type),
     date: todayStr(),
     cust: '',
@@ -363,6 +365,7 @@ export default function Invoices() {
 
   const [saved, setSaved] = useState([]);
   const [doc, setDoc] = useState(null);
+  const [editorOpen, setEditorOpen] = useState(false);
   const [modal, setModal] = useState(null);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
@@ -412,9 +415,11 @@ export default function Invoices() {
     if (!doc.cust.trim()) return setErr('Enter a customer name.');
     setSaving(true);
 
+    const status = doc.status || 'open';
     const data = {
       no: doc.no,
       type: doc.type || 'invoice',
+      status,
       date: doc.date,
       cust: doc.cust,
       items: doc.items.map((it) => ({ d: it.d, q: num(it.q), r: num(it.r) })),
@@ -432,7 +437,23 @@ export default function Invoices() {
 
     setErr('');
     setDirty(false);
-    setDoc((d) => ({ ...d, id }));
+    setDoc((d) => ({ ...d, id, status }));
+    load();
+  };
+
+  const toggleRowStatus = async (s, e) => {
+    e.stopPropagation();
+    const nextStatus = docStatus(s) === 'paid' ? 'open' : 'paid';
+    const base = s.data || {};
+    const updatedData = {
+      ...base,
+      no: s.no || base.no,
+      type: s.type || base.type || 'invoice',
+      status: nextStatus,
+    };
+    const r = await sb.from('invoices').update({ data: updatedData }).eq('id', s.id);
+    if (r.error) return setErr(r.error.message);
+    if (doc?.id === s.id) setDoc((d) => ({ ...d, status: nextStatus }));
     load();
   };
 
@@ -441,6 +462,7 @@ export default function Invoices() {
     setDoc({
       id: s.id,
       type: s.type || 'invoice',
+      status: docStatus(s),
       no: d.no || s.no,
       date: d.date,
       cust: d.cust,
@@ -448,7 +470,11 @@ export default function Invoices() {
     });
     setErr('');
     setDirty(false);
-    setModal(openPreview ? 'preview' : null);
+    if (openPreview) {
+      setModal('preview');
+    } else {
+      setEditorOpen(true);
+    }
   };
 
   const deleteDoc = async (id, e) => {
@@ -466,6 +492,7 @@ export default function Invoices() {
     setDoc(blankDoc(type, saved));
     setErr('');
     setDirty(false);
+    setEditorOpen(true);
   };
 
   const switchDocType = (type) => {
@@ -532,27 +559,25 @@ export default function Invoices() {
     }
   };
 
-  const docTotal = useMemo(
+  const currentTotal = useMemo(
     () => (doc ? doc.items.reduce((s, it) => s + num(it.q) * num(it.r), 0) : 0),
     [doc]
   );
 
   const stats = useMemo(() => {
-    let invCount = 0;
-    let invSum = 0;
-    let qtCount = 0;
-    let qtSum = 0;
+    let outstanding = 0;
+    let collected = 0;
+    let openCount = 0;
     saved.forEach((s) => {
-      const t = ((s.data || s).items || []).reduce((acc, it) => acc + num(it.q) * num(it.r), 0);
-      if ((s.type || 'invoice') === 'quotation') {
-        qtCount += 1;
-        qtSum += t;
+      const t = docTotal(s);
+      if (docStatus(s) === 'paid') {
+        collected += t;
       } else {
-        invCount += 1;
-        invSum += t;
+        outstanding += t;
+        openCount += 1;
       }
     });
-    return { invCount, invSum, qtCount, qtSum };
+    return { outstanding, collected, openCount };
   }, [saved]);
 
   const filtered = useMemo(
@@ -569,7 +594,6 @@ export default function Invoices() {
     [saved, filter, search]
   );
 
-  const total = (s) => ((s.data || s).items || []).reduce((t, it) => t + num(it.q) * num(it.r), 0);
   const typeLabel = (t) => (t === 'quotation' ? 'Quotation' : 'Invoice');
 
   const typeBadge = (t) => ({
@@ -591,14 +615,14 @@ export default function Invoices() {
           align-items: flex-end;
           gap: 12px;
           flex-wrap: wrap;
-          margin-bottom: 16px;
+          margin-bottom: 14px;
         }
 
         .inv-stats {
           display: grid;
           grid-template-columns: repeat(2, minmax(0, 1fr));
           gap: 10px;
-          margin-bottom: 16px;
+          margin-bottom: 14px;
         }
 
         .inv-stat-pill {
@@ -614,9 +638,13 @@ export default function Invoices() {
 
         .invoice-layout {
           display: grid;
-          grid-template-columns: 380px minmax(0, 1fr);
+          grid-template-columns: minmax(0, 1fr);
           gap: 16px;
           align-items: start;
+        }
+
+        .invoice-layout.is-expanded {
+          grid-template-columns: 380px minmax(0, 1fr);
         }
 
         .inv-seg {
@@ -639,7 +667,6 @@ export default function Invoices() {
           font-size: 12px;
           font-weight: 600;
           cursor: pointer;
-          transition: background .15s, color .15s;
         }
 
         .inv-items-box {
@@ -675,7 +702,8 @@ export default function Invoices() {
         }
 
         @media (max-width: 840px) {
-          .invoice-layout {
+          .invoice-layout,
+          .invoice-layout.is-expanded {
             grid-template-columns: minmax(0, 1fr) !important;
           }
 
@@ -705,7 +733,7 @@ export default function Invoices() {
         <div>
           <h1 style={{ margin: 0 }}>Invoices &amp; Quotations</h1>
           <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>
-            Create, manage, and export A4 billing documents
+            Manage documents and export A4 PDFs
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -714,157 +742,198 @@ export default function Invoices() {
         </div>
       </div>
 
-      {/* ── summary strip ── */}
+      {/* ── summary strip: Outstanding & Collected ── */}
       <div className="inv-stats">
         <div className="inv-stat-pill">
           <div>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.04em' }}>
-              Invoices ({stats.invCount})
+              Outstanding ({stats.openCount})
             </div>
-            <div style={{ fontSize: 17, fontWeight: 700, marginTop: 2 }}>MVR {f(stats.invSum)}</div>
+            <div style={{ fontSize: 17, fontWeight: 700, marginTop: 2 }}>MVR {f(stats.outstanding)}</div>
           </div>
-          <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 20, ...typeBadge('invoice') }}>
-            HV
+          <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 20, background: 'rgba(192, 57, 43, 0.12)', color: '#c0392b' }}>
+            Open
           </span>
         </div>
+
         <div className="inv-stat-pill">
           <div>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.04em' }}>
-              Quotations ({stats.qtCount})
+              Collected
             </div>
-            <div style={{ fontSize: 17, fontWeight: 700, marginTop: 2 }}>MVR {f(stats.qtSum)}</div>
+            <div style={{ fontSize: 17, fontWeight: 700, marginTop: 2 }}>MVR {f(stats.collected)}</div>
           </div>
-          <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 20, ...typeBadge('quotation') }}>
-            QT
+          <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 20, background: 'rgba(39, 174, 96, 0.14)', color: '#27ae60' }}>
+            Paid
           </span>
         </div>
       </div>
 
-      <div className="invoice-layout">
-        {/* ── editor card ── */}
-        <div className="card invoice-form-card">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontWeight: 700, fontSize: 15 }}>
-                {doc.id ? 'Edit ' + typeLabel(doc.type) : 'New ' + typeLabel(doc.type)}
-              </span>
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 600,
-                  padding: '2px 8px',
-                  borderRadius: 20,
-                  background: doc.id && !dirty ? 'rgba(39, 174, 96, 0.14)' : 'var(--bg)',
-                  color: doc.id && !dirty ? '#27ae60' : 'var(--muted)',
-                  border: '1px solid var(--line)',
-                }}
-              >
-                {doc.id ? (dirty ? 'Unsaved' : 'Saved') : 'Draft'}
-              </span>
-            </div>
-            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)' }}>{doc.no}</span>
-          </div>
-
-          {/* segmented doc type switcher */}
-          <div className="inv-seg">
-            {['invoice', 'quotation'].map((t) => {
-              const active = (doc.type || 'invoice') === t;
-              return (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => switchDocType(t)}
+      <div className={`invoice-layout ${editorOpen ? 'is-expanded' : ''}`}>
+        {/* ── expandable editor card (hidden on initial load) ── */}
+        {editorOpen && (
+          <div className="card invoice-form-card">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontWeight: 700, fontSize: 15 }}>
+                  {doc.id ? 'Edit ' + typeLabel(doc.type) : 'New ' + typeLabel(doc.type)}
+                </span>
+                <span
                   style={{
-                    background: active ? 'var(--accent)' : 'transparent',
-                    color: active ? 'var(--on)' : 'var(--muted)',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    padding: '2px 8px',
+                    borderRadius: 20,
+                    background: doc.id && !dirty ? 'rgba(39, 174, 96, 0.14)' : 'var(--bg)',
+                    color: doc.id && !dirty ? '#27ae60' : 'var(--muted)',
+                    border: '1px solid var(--line)',
                   }}
                 >
-                  {typeLabel(t)}
-                </button>
-              );
-            })}
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <Field label="Document No." style={{ marginBottom: 0 }}>
-              <Inp value={doc.no} onChange={setField('no')} />
-            </Field>
-            <Field label="Issue Date" style={{ marginBottom: 0 }}>
-              <Inp className="invoice-date-input" type="date" value={doc.date} onChange={setField('date')} />
-            </Field>
-          </div>
-
-          <Field label="Customer" style={{ marginTop: 11 }}>
-            <Inp value={doc.cust} onChange={setField('cust')} placeholder="Customer or company name" />
-          </Field>
-
-          {/* line items */}
-          <div className="inv-items-box">
-            <div
-              className="invoice-items-row"
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 64px 82px 30px',
-                gap: 6,
-                marginBottom: 6,
-                fontSize: 10,
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '.04em',
-                color: 'var(--muted)',
-              }}
-            >
-              <span>Description</span>
-              <span style={{ textAlign: 'right' }}>Qty</span>
-              <span style={{ textAlign: 'right' }}>Rate</span>
-              <span />
+                  {doc.id ? (dirty ? 'Unsaved' : 'Saved') : 'Draft'}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditorOpen(false)}
+                style={{
+                  margin: 0,
+                  padding: '4px 9px',
+                  borderRadius: 8,
+                  border: '1px solid var(--line)',
+                  background: 'var(--bg)',
+                  color: 'var(--muted)',
+                  font: 'inherit',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Hide
+              </button>
             </div>
 
-            {doc.items.map((it, i) => (
-              <ItemRow key={i} item={it} idx={i} onChange={changeItem} onDelete={delItem} />
-            ))}
+            {/* segmented doc type switcher */}
+            <div className="inv-seg">
+              {['invoice', 'quotation'].map((t) => {
+                const active = (doc.type || 'invoice') === t;
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => switchDocType(t)}
+                    style={{
+                      background: active ? 'var(--accent)' : 'transparent',
+                      color: active ? 'var(--on)' : 'var(--muted)',
+                    }}
+                  >
+                    {typeLabel(t)}
+                  </button>
+                );
+              })}
+            </div>
 
-            <Btn alt onClick={addItem} style={{ width: '100%', fontSize: 12, padding: '7px 12px', background: 'var(--panel)' }}>
-              + Add line item
-            </Btn>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <Field label="Document No." style={{ marginBottom: 0 }}>
+                <Inp value={doc.no} onChange={setField('no')} />
+              </Field>
+              <Field label="Issue Date" style={{ marginBottom: 0 }}>
+                <Inp className="invoice-date-input" type="date" value={doc.date} onChange={setField('date')} />
+              </Field>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px', gap: 10, marginTop: 11 }}>
+              <Field label="Customer" style={{ marginBottom: 0 }}>
+                <Inp value={doc.cust} onChange={setField('cust')} placeholder="Customer name" />
+              </Field>
+              <Field label="Status" style={{ marginBottom: 0 }}>
+                <select
+                  value={doc.status || 'open'}
+                  onChange={setField('status')}
+                  style={{
+                    width: '100%',
+                    padding: '9px 10px',
+                    border: '1px solid var(--line)',
+                    borderRadius: 10,
+                    background: 'var(--bg)',
+                    color: 'var(--ink)',
+                    font: 'inherit',
+                    fontSize: 13,
+                  }}
+                >
+                  <option value="open">Open</option>
+                  <option value="paid">Paid</option>
+                </select>
+              </Field>
+            </div>
+
+            {/* line items */}
+            <div className="inv-items-box">
+              <div
+                className="invoice-items-row"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 64px 82px 30px',
+                  gap: 6,
+                  marginBottom: 6,
+                  fontSize: 10,
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '.04em',
+                  color: 'var(--muted)',
+                }}
+              >
+                <span>Description</span>
+                <span style={{ textAlign: 'right' }}>Qty</span>
+                <span style={{ textAlign: 'right' }}>Rate</span>
+                <span />
+              </div>
+
+              {doc.items.map((it, i) => (
+                <ItemRow key={i} item={it} idx={i} onChange={changeItem} onDelete={delItem} />
+              ))}
+
+              <Btn alt onClick={addItem} style={{ width: '100%', fontSize: 12, padding: '7px 12px', background: 'var(--panel)' }}>
+                + Add line item
+              </Btn>
+            </div>
+
+            {/* total bar */}
+            <div
+              style={{
+                background: 'var(--bg)',
+                border: '1px solid var(--line)',
+                borderRadius: 11,
+                padding: '11px 13px',
+                marginTop: 12,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)' }}>Total Amount</span>
+              <span style={{ fontSize: 16, fontWeight: 700 }}>MVR {f(currentTotal)}</span>
+            </div>
+
+            {err && <p className="err" style={{ marginTop: 8 }}>{err}</p>}
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
+              <Btn onClick={saveDoc} disabled={saving} style={{ width: '100%' }}>
+                {saving ? 'Saving…' : doc.id ? 'Update' : 'Save'}
+              </Btn>
+              <Btn alt onClick={() => setModal('preview')} style={{ width: '100%' }}>
+                Preview A4
+              </Btn>
+            </div>
           </div>
+        )}
 
-          {/* total bar */}
-          <div
-            style={{
-              background: 'var(--bg)',
-              border: '1px solid var(--line)',
-              borderRadius: 11,
-              padding: '11px 13px',
-              marginTop: 12,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)' }}>Total Amount</span>
-            <span style={{ fontSize: 16, fontWeight: 700 }}>MVR {f(docTotal)}</span>
-          </div>
-
-          {err && <p className="err" style={{ marginTop: 8 }}>{err}</p>}
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
-            <Btn onClick={saveDoc} disabled={saving} style={{ width: '100%' }}>
-              {saving ? 'Saving…' : doc.id ? 'Update' : 'Save'}
-            </Btn>
-            <Btn alt onClick={() => setModal('preview')} style={{ width: '100%' }}>
-              Preview A4
-            </Btn>
-          </div>
-        </div>
-
-        {/* ── saved documents register ── */}
+        {/* ── saved documents register (primary focus on open) ── */}
         <div className="card invoice-saved-card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
             <div>
               <h2 style={{ margin: 0 }}>Saved documents</h2>
               <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
-                Click any row to edit · Use eye icon for quick A4 preview
+                Click a row to edit · Toggle status pill for Paid / Open
               </div>
             </div>
 
@@ -914,6 +983,7 @@ export default function Invoices() {
                     <th>Type</th>
                     <th>Date</th>
                     <th>Customer</th>
+                    <th>Status</th>
                     <th style={{ textAlign: 'right' }}>Total</th>
                     <th></th>
                   </tr>
@@ -921,7 +991,8 @@ export default function Invoices() {
 
                 <tbody>
                   {filtered.map((s) => {
-                    const isActive = doc?.id === s.id;
+                    const isActive = editorOpen && doc?.id === s.id;
+                    const st = docStatus(s);
                     return (
                       <tr
                         key={s.id}
@@ -942,8 +1013,29 @@ export default function Invoices() {
                         <td style={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {(s.data || {}).cust || ''}
                         </td>
+                        <td style={{ whiteSpace: 'nowrap' }}>
+                          <button
+                            type="button"
+                            onClick={(e) => toggleRowStatus(s, e)}
+                            title="Click to toggle Open / Paid"
+                            style={{
+                              margin: 0,
+                              padding: '2px 8px',
+                              borderRadius: 12,
+                              border: 'none',
+                              cursor: 'pointer',
+                              font: 'inherit',
+                              fontSize: 11,
+                              fontWeight: 600,
+                              background: st === 'paid' ? 'rgba(39, 174, 96, 0.14)' : 'rgba(192, 57, 43, 0.12)',
+                              color: st === 'paid' ? '#27ae60' : '#c0392b',
+                            }}
+                          >
+                            {st === 'paid' ? 'Paid' : 'Open'}
+                          </button>
+                        </td>
                         <td className="n" style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
-                          MVR {f(total(s))}
+                          MVR {f(docTotal(s))}
                         </td>
                         <td style={{ whiteSpace: 'nowrap', textAlign: 'right' }}>
                           <a
