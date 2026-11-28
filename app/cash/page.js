@@ -232,7 +232,7 @@ export default function Cash() {
             <table style={{ width:'100%',borderCollapse:'collapse',fontSize:12,minWidth:420 }}>
               <thead>
                 <tr>
-                  {['Date','Type','Details','Amount','Balance'].map(h => (
+                  {['Date','Details','Amount','Balance'].map(h => (
                     <th key={h} style={{ padding:'6px 6px',borderBottom:'1px solid var(--line)',
                       fontSize:11,textTransform:'uppercase',letterSpacing:'.04em',
                       color:'var(--muted)',fontWeight:600,textAlign:'left' }}>{h}</th>
@@ -244,9 +244,6 @@ export default function Cash() {
                   <tr key={i}>
                     <td style={{ padding:'7px 6px',borderBottom:'1px solid var(--line)',whiteSpace:'nowrap' }}>
                       {x.d ? dmy(x.d) : ''}
-                    </td>
-                    <td style={{ padding:'7px 6px',borderBottom:'1px solid var(--line)',whiteSpace:'nowrap' }}>
-                      {x.t}
                     </td>
                     <td style={{ padding:'7px 6px',borderBottom:'1px solid var(--line)',
                       maxWidth:160,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>
@@ -264,7 +261,7 @@ export default function Cash() {
                   </tr>
                 ))}
                 {stmt.length===0 && (
-                  <tr><td colSpan="5" style={{ padding:'12px 6px',color:'var(--muted)' }}>No entries yet.</td></tr>
+                  <tr><td colSpan="4" style={{ padding:'12px 6px',color:'var(--muted)' }}>No entries yet.</td></tr>
                 )}
               </tbody>
             </table>
